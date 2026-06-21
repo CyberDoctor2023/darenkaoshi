@@ -624,10 +624,6 @@ h1 {
     padding: 0 16px;
   }
 
-  .progress-dots::before {
-    left: 16px;
-  }
-
 }
 
 @media (max-width: 430px) {
