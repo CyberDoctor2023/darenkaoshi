@@ -17,7 +17,7 @@ Build a LifeNotes product subpage inside a broader CyberDoctor personal portfoli
 
 ## Source Content
 
-- Page 2 hero: `一个支持自然语音操控、AI 整理优先级的备忘录`
+- Page 2 hero: `一个支持自然语音操控的AI备忘录。`
 - Page 3 section title: `Explore use case for lifenotes`
 - Page 3 copy: `用自然语音和 LifeNotes 交流，\n以帮你捕捉内容，并整理成清晰的记录。`
 - Page 4 copy: `优先级不明确？\n只需轻轻下拉，lifenotes 就能帮你理清轻重缓急。`
