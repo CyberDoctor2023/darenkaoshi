@@ -44,7 +44,10 @@ Key design signals:
 - Input: support pointer drag and two-finger/trackpad horizontal gestures through native horizontal scrolling plus CSS Scroll Snap. `scroll-snap-stop: always` should keep fast swipes from skipping over use cases.
 - Performance: only the visible hero/current carousel video should play; offscreen carousel videos should be paused to avoid simultaneous high-resolution video decoding.
 - Carousel state: native scroll, trackpad/two-finger gestures, and dot clicks must all update the same active slide, dot indicator, text opacity, and video playback state.
+- Carousel state changes from trackpad/two-finger scrolling should feel immediate, with no extra visual delay compared with dot clicks.
+- Carousel should auto-advance through the five use cases when the current demo video finishes, like Apple's iOS highlights gallery, so users can watch without manually clicking each item; do not use a fixed hard-coded timer.
 - Performance: HDR start-frame videos should decode only long enough to paint their first frame, then pause; they must not all loop continuously in the background.
+- Media loading should prewarm nearby carousel videos as compressed browser-cache data while keeping decoding/playback limited to the current slide.
 - Perceived loading: mirror Apple's media stack pattern: keep a first-frame image layer and a video layer in the same positioned stack, then fade/hide the image layer once video data is ready so the screen is not black before MP4 loading/decoding catches up.
 - Refresh loading: screen containers should also carry the matching first-frame image as a CSS background and preload poster assets so a refresh does not briefly expose a black phone screen before the poster image paints.
 - Page resume: after lock screen, tab backgrounding, or bfcache restore, keep the first-frame image visible until the browser has actually painted a decoded video frame again; do not hide the poster merely because `canplay` or `playing` fired.
@@ -80,7 +83,7 @@ Key design signals:
 
 - Run a local static dev server and inspect the page in a browser.
 - Verify Cloudflare Pages custom domain API status for `cyberdoctor.me` and `www.cyberdoctor.me`, and verify DNS/redirect configuration through Cloudflare API because dashboard state can lag.
-- Verify all videos load and have `muted`, `playsinline`, and `loop`; only the hero keeps static HTML `autoplay`, while carousel demos are played by carousel state.
+- Verify all videos load and have `muted` and `playsinline`; only the hero loops, while carousel demos advance on each current video's `ended` event.
 - Verify each visible device video has a poster generated from the matching video, and static assets have long-lived cache headers on Cloudflare Pages.
 - Verify generated video files have no audio stream where feasible.
 - Verify only the current carousel video is playing after slide changes.

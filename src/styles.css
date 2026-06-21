@@ -262,7 +262,7 @@ h1 {
     var(--card);
   opacity: 0.44;
   transform: scale(0.986);
-  transition: opacity 360ms ease, transform 740ms cubic-bezier(0.2, 0, 0, 1);
+  transition: opacity 300ms ease, transform 620ms cubic-bezier(0.2, 0, 0, 1);
   contain: layout paint style;
 }
 
@@ -283,16 +283,16 @@ h1 {
   opacity: 0.18;
   filter: blur(1px);
   transition:
-    opacity 420ms ease,
-    filter 420ms ease,
-    transform 620ms cubic-bezier(0.2, 0, 0, 1);
+    opacity 300ms ease,
+    filter 300ms ease,
+    transform 560ms cubic-bezier(0.2, 0, 0, 1);
   transition-delay: 0ms;
 }
 
 .slide.is-current p {
   opacity: 1;
   filter: blur(0);
-  transition-delay: 120ms;
+  transition-delay: 0ms;
 }
 
 .slide .iphone-frame {
@@ -405,6 +405,7 @@ h1 {
   --dot-gap: 12px;
   --active-width: 36px;
   --active-dot: 0;
+  --slide-progress: 0;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -428,9 +429,26 @@ h1 {
   width: var(--active-width);
   height: var(--dot-size);
   border-radius: 999px;
-  background: var(--control-fg);
+  background: rgba(245, 245, 247, 0.32);
   transform: translate3d(calc(var(--active-dot) * (var(--dot-size) + var(--dot-gap))), -50%, 0);
   transition: transform 560ms cubic-bezier(0.2, 0, 0, 1);
+  will-change: transform;
+}
+
+.progress-dots::after {
+  content: "";
+  position: absolute;
+  left: 18px;
+  top: 50%;
+  width: var(--active-width);
+  height: var(--dot-size);
+  border-radius: 999px;
+  background: var(--control-fg);
+  transform:
+    translate3d(calc(var(--active-dot) * (var(--dot-size) + var(--dot-gap))), -50%, 0)
+    scaleX(var(--slide-progress));
+  transform-origin: left center;
+  transition: transform 120ms linear;
   will-change: transform;
 }
 
@@ -454,7 +472,7 @@ h1 {
 
 .progress-dots button {
   position: relative;
-  z-index: 1;
+  z-index: 2;
   width: var(--dot-size);
   height: var(--dot-size);
   border-radius: 999px;
