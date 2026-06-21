@@ -156,6 +156,12 @@ h2 {
   height: 100%;
   object-fit: fill;
   background: #000;
+  opacity: 1;
+  transition: opacity 160ms ease;
+}
+
+.screen.is-video-ready .screen-poster {
+  opacity: 0;
 }
 
 .device-frame {

@@ -23,7 +23,9 @@ function loadVideo(video, preload = "metadata") {
 
 function markReady(video) {
   if (!video) return;
-  video.classList.toggle("is-ready", video.readyState >= 2);
+  const isReady = video.readyState >= 2;
+  video.classList.toggle("is-ready", isReady);
+  video.closest(".screen")?.classList.toggle("is-video-ready", isReady);
 }
 
 function setMutedVideos() {
