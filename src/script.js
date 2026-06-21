@@ -28,6 +28,12 @@ function markReady(video) {
   video.closest(".screen")?.classList.toggle("is-video-ready", isReady);
 }
 
+function showPoster(video) {
+  if (!video) return;
+  video.classList.remove("is-ready");
+  video.closest(".screen")?.classList.remove("is-video-ready");
+}
+
 function setMutedVideos() {
   videos.forEach((video) => {
     video.muted = true;
@@ -35,7 +41,11 @@ function setMutedVideos() {
     video.volume = 0;
     video.playsInline = true;
     video.addEventListener("loadeddata", () => markReady(video), { once: true });
+    video.addEventListener("canplay", () => markReady(video));
     video.addEventListener("playing", () => markReady(video));
+    video.addEventListener("waiting", () => showPoster(video));
+    video.addEventListener("stalled", () => showPoster(video));
+    video.addEventListener("emptied", () => showPoster(video));
     markReady(video);
   });
 }
@@ -75,6 +85,13 @@ function updateVideoPlayback() {
   } else {
     pauseVideo(heroVideo);
   }
+}
+
+function restoreAfterPageResume() {
+  videos.forEach(showPoster);
+  requestAnimationFrame(() => {
+    updateVideoPlayback();
+  });
 }
 
 function setCurrent(nextIndex) {
@@ -140,6 +157,28 @@ if ("IntersectionObserver" in window && heroVideo) {
 
 window.addEventListener("resize", () => {
   window.requestAnimationFrame(() => scrollToSlide(index, "auto"));
+});
+
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden) {
+    videos.forEach((video) => {
+      showPoster(video);
+      pauseVideo(video);
+    });
+    return;
+  }
+  restoreAfterPageResume();
+});
+
+window.addEventListener("pagehide", () => {
+  videos.forEach((video) => {
+    showPoster(video);
+    pauseVideo(video);
+  });
+});
+
+window.addEventListener("pageshow", (event) => {
+  if (event.persisted) restoreAfterPageResume();
 });
 
 setMutedVideos();
