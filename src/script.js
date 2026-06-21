@@ -3,8 +3,9 @@ const track = carousel.querySelector(".carousel-track");
 const slides = [...carousel.querySelectorAll(".slide")];
 const dots = [...carousel.querySelectorAll(".progress-dots button")];
 const progressDots = carousel.querySelector(".progress-dots");
-const videos = [...document.querySelectorAll("video")];
-const heroVideo = document.querySelector(".hero video");
+const videos = [...document.querySelectorAll(".screen-video")];
+const posterVideos = [...document.querySelectorAll(".screen-poster-video")];
+const heroVideo = document.querySelector(".hero .screen-video");
 
 let index = 0;
 let previousIndex = -1;
@@ -70,6 +71,17 @@ function waitForPaintedFrame(video) {
 }
 
 function setMutedVideos() {
+  posterVideos.forEach((video) => {
+    video.muted = true;
+    video.defaultMuted = true;
+    video.volume = 0;
+    video.playsInline = true;
+    video.addEventListener("loadeddata", () => video.classList.add("is-ready"), { once: true });
+    video.addEventListener("playing", () => video.classList.add("is-ready"), { once: true });
+    const playPromise = video.play();
+    if (playPromise) playPromise.catch(() => {});
+  });
+
   videos.forEach((video) => {
     video.muted = true;
     video.defaultMuted = true;
@@ -105,7 +117,7 @@ function pauseVideo(video) {
 
 function updateVideoPlayback() {
   slides.forEach((slide, slideIndex) => {
-    const video = slide.querySelector("video");
+    const video = slide.querySelector(".screen-video");
     if (slideIndex === index) {
       if (previousIndex !== index && video) {
         video.currentTime = 0;

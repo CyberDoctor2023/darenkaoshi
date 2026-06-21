@@ -5,11 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>CyberDoctor - LifeNotes</title>
     <link rel="preload" href="./public/posters/intro.jpg" as="image" fetchpriority="high" />
+    <link rel="preload" href="./public/posters/use-case-1.jpg" as="image" fetchpriority="high" />
+    <link rel="preload" href="./public/posters/use-case-2.jpg" as="image" />
+    <link rel="preload" href="./public/posters/use-case-3.jpg" as="image" />
+    <link rel="preload" href="./public/posters/use-case-4.jpg" as="image" />
+    <link rel="preload" href="./public/posters/use-case-5.jpg" as="image" />
     <link rel="preload" href="./public/frames/iphone-17-white-portrait.png" as="image" fetchpriority="high" />
     <meta name="robots" content="noai, noimageai" />
     <meta name="tdm-reservation" content="1" />
-    <link rel="stylesheet" href="./src/styles.css?v=mobile-ycrop1" />
-    <script src="./src/guard.js?v=mobile-ycrop1"></script>
+    <link rel="stylesheet" href="./src/styles.css?v=hdr-startframe1" />
+    <script src="./src/guard.js?v=hdr-startframe1"></script>
   </head>
   <body>
     <header class="global-nav" aria-label="CyberDoctor">
@@ -28,9 +33,11 @@
         <div class="hero-inner">
           <h1>一个支持自然语音操控的AI备忘录。</h1>
           <figure class="hero-demo iphone-frame" aria-label="LifeNotes">
-            <div class="screen">
+            <div class="screen" style="--poster: url('./public/posters/intro.jpg')">
               <img class="screen-poster" src="./public/posters/intro.jpg" alt="" aria-hidden="true" fetchpriority="high" />
+              <video class="screen-poster-video" src="./public/poster-videos/intro.mp4" autoplay loop muted playsinline preload="auto" aria-hidden="true"></video>
               <video
+                class="screen-video"
                 src="./public/videos/介绍0-muted.mp4"
                 autoplay
                 loop
@@ -55,9 +62,11 @@
             <article class="slide slide-right is-current">
               <p>用自然语音和 LifeNotes 交流，<br />以帮你捕捉内容，并整理成清晰的记录。</p>
               <figure class="iphone-frame">
-                <div class="screen">
-                  <img class="screen-poster" src="./public/posters/use-case-1.jpg" alt="" aria-hidden="true" loading="eager" />
+                <div class="screen" style="--poster: url('./public/posters/use-case-1.jpg')">
+                  <img class="screen-poster" src="./public/posters/use-case-1.jpg" alt="" aria-hidden="true" loading="eager" decoding="sync" />
+                  <video class="screen-poster-video" src="./public/poster-videos/use-case-1.mp4" autoplay loop muted playsinline preload="auto" aria-hidden="true"></video>
                   <video
+                    class="screen-video"
                     data-src="./public/videos/用例1-muted.mp4"
                     loop
                     muted
@@ -73,9 +82,11 @@
             <article class="slide slide-left">
               <p>优先级不明确？<br />只需轻轻下拉，lifenotes 就能帮你理清轻重缓急。</p>
               <figure class="iphone-frame">
-                <div class="screen">
-                  <img class="screen-poster" src="./public/posters/use-case-2.jpg" alt="" aria-hidden="true" loading="lazy" />
+                <div class="screen" style="--poster: url('./public/posters/use-case-2.jpg')">
+                  <img class="screen-poster" src="./public/posters/use-case-2.jpg" alt="" aria-hidden="true" loading="eager" decoding="async" />
+                  <video class="screen-poster-video" src="./public/poster-videos/use-case-2.mp4" autoplay loop muted playsinline preload="auto" aria-hidden="true"></video>
                   <video
+                    class="screen-video"
                     data-src="./public/videos/用例2-muted.mp4"
                     loop
                     muted
@@ -91,9 +102,11 @@
             <article class="slide slide-center">
               <p>笔记太多，忘记放在哪里？<br />只需提问，lifenotes 就能从过往记录中找到相关内容。</p>
               <figure class="iphone-frame">
-                <div class="screen">
-                  <img class="screen-poster" src="./public/posters/use-case-3.jpg" alt="" aria-hidden="true" loading="lazy" />
+                <div class="screen" style="--poster: url('./public/posters/use-case-3.jpg')">
+                  <img class="screen-poster" src="./public/posters/use-case-3.jpg" alt="" aria-hidden="true" loading="eager" decoding="async" />
+                  <video class="screen-poster-video" src="./public/poster-videos/use-case-3.mp4" autoplay loop muted playsinline preload="auto" aria-hidden="true"></video>
                   <video
+                    class="screen-video"
                     data-src="./public/videos/用例3-muted.mp4"
                     loop
                     muted
@@ -111,9 +124,11 @@
                 需要更多信息时，LifeNotes 也可以连接外部搜索。<br />从一个链接、一段问题，到一个需要补充背景的想法，<br />都可以帮助你获得更完整的上下文。
               </p>
               <figure class="iphone-frame">
-                <div class="screen">
-                  <img class="screen-poster" src="./public/posters/use-case-4.jpg" alt="" aria-hidden="true" loading="lazy" />
+                <div class="screen" style="--poster: url('./public/posters/use-case-4.jpg')">
+                  <img class="screen-poster" src="./public/posters/use-case-4.jpg" alt="" aria-hidden="true" loading="eager" decoding="async" />
+                  <video class="screen-poster-video" src="./public/poster-videos/use-case-4.mp4" autoplay loop muted playsinline preload="auto" aria-hidden="true"></video>
                   <video
+                    class="screen-video"
                     data-src="./public/videos/用例4-muted.mp4"
                     loop
                     muted
@@ -129,9 +144,11 @@
             <article class="slide slide-crop">
               <p>整个系统，都可以用语音交互。<br />删除记录、移动看板、修改事件<br />你只要说出来，LifeNotes 就能做到。</p>
               <figure class="iphone-frame">
-                <div class="screen">
-                  <img class="screen-poster" src="./public/posters/use-case-5.jpg" alt="" aria-hidden="true" loading="lazy" />
+                <div class="screen" style="--poster: url('./public/posters/use-case-5.jpg')">
+                  <img class="screen-poster" src="./public/posters/use-case-5.jpg" alt="" aria-hidden="true" loading="eager" decoding="async" />
+                  <video class="screen-poster-video" src="./public/poster-videos/use-case-5.mp4" autoplay loop muted playsinline preload="auto" aria-hidden="true"></video>
                   <video
+                    class="screen-video"
                     data-src="./public/videos/用例5-muted.mp4"
                     loop
                     muted
@@ -158,6 +175,6 @@
       </section>
     </main>
 
-    <script src="./src/script.js?v=mobile-ycrop1"></script>
+    <script src="./src/script.js?v=hdr-startframe1"></script>
   </body>
 </html>

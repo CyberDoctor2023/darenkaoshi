@@ -12,6 +12,9 @@
 /public/posters/*
   Cache-Control: public, max-age=31536000, immutable
 
+/public/poster-videos/*
+  Cache-Control: public, max-age=31536000, immutable
+
 /public/frames/*
   Cache-Control: public, max-age=31536000, immutable
 
