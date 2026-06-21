@@ -13,8 +13,6 @@ let heroVisible = true;
 let scrollRaf = 0;
 let scrollEndTimer = 0;
 let hasPrewarmedCarousel = false;
-let lastTrackScrollLeft = track.scrollLeft;
-let wheelSnapTarget = -1;
 let carouselVisible = false;
 
 function getScreen(video) {
@@ -46,7 +44,9 @@ function showPoster(video) {
 }
 
 function setSlideProgress(value) {
-  progressDots.style.setProperty("--slide-progress", Math.max(0, Math.min(1, value)));
+  const progress = Math.max(0, Math.min(1, value));
+  progressDots.style.setProperty("--slide-progress", progress);
+  progressDots.style.setProperty("--slide-progress-width", `${36 * progress}px`);
 }
 
 function getVideoSlideIndex(video) {
@@ -167,9 +167,16 @@ function prewarmCarouselVideos() {
   hasPrewarmedCarousel = true;
   slides.forEach((slide) => {
     const video = slide.querySelector(".screen-video");
+    if (getVideoSlideIndex(video) === index) return;
     loadVideo(video, "auto");
     pauseVideo(video);
   });
+}
+
+function activateCarousel() {
+  if (carouselVisible) return;
+  carouselVisible = true;
+  updateVideoPlayback();
 }
 
 function resetVideo(video) {
@@ -257,34 +264,8 @@ function getSlideSnapLeft(slide) {
   return slide.offsetLeft + slide.offsetWidth / 2 - track.clientWidth / 2;
 }
 
-function getScrollProgressIndex(direction = 0) {
-  const activationProgress = 0.18;
-  const currentLeft = getSlideSnapLeft(slides[index]);
-
-  if (direction > 0 && index < slides.length - 1) {
-    const nextLeft = getSlideSnapLeft(slides[index + 1]);
-    if (track.scrollLeft >= currentLeft + (nextLeft - currentLeft) * activationProgress) {
-      return index + 1;
-    }
-  }
-
-  if (direction < 0 && index > 0) {
-    const previousLeft = getSlideSnapLeft(slides[index - 1]);
-    if (track.scrollLeft <= currentLeft - (currentLeft - previousLeft) * activationProgress) {
-      return index - 1;
-    }
-  }
-
-  return getClosestSlideIndex();
-}
-
 function syncCurrentFromScroll() {
-  const direction = Math.sign(track.scrollLeft - lastTrackScrollLeft);
-  lastTrackScrollLeft = track.scrollLeft;
-  const nextIndex = direction ? getScrollProgressIndex(direction) : getClosestSlideIndex();
-  if (wheelSnapTarget !== -1 && Math.abs(track.scrollLeft - getSlideSnapLeft(slides[wheelSnapTarget])) < 4) {
-    wheelSnapTarget = -1;
-  }
+  const nextIndex = getClosestSlideIndex();
   if (nextIndex !== index) {
     setCurrent(nextIndex);
     return;
@@ -304,35 +285,16 @@ function scrollToSlide(nextIndex, behavior = "smooth") {
 
 dots.forEach((dot, dotIndex) => {
   dot.addEventListener("click", () => {
+    activateCarousel();
     prewarmCarouselVideos();
-    wheelSnapTarget = -1;
     scrollToSlide(dotIndex);
   });
 });
 
 track.addEventListener(
-  "wheel",
-  (event) => {
-    if (Math.abs(event.deltaX) < 8 || Math.abs(event.deltaX) < Math.abs(event.deltaY) * 0.8) return;
-
-    event.preventDefault();
-    prewarmCarouselVideos();
-
-    if (wheelSnapTarget !== -1) return;
-
-    const direction = Math.sign(event.deltaX);
-    const nextIndex = Math.max(0, Math.min(slides.length - 1, index + direction));
-    if (nextIndex === index) return;
-
-    wheelSnapTarget = nextIndex;
-    scrollToSlide(nextIndex);
-  },
-  { passive: false }
-);
-
-track.addEventListener(
   "scroll",
   () => {
+    activateCarousel();
     prewarmCarouselVideos();
     if (!scrollRaf) {
       scrollRaf = window.requestAnimationFrame(() => {
@@ -371,7 +333,7 @@ if ("IntersectionObserver" in window) {
         updateVideoPlayback();
       }
     },
-    { threshold: 0.35 }
+    { threshold: 0.01 }
   );
   carouselObserver.observe(carousel);
 } else {

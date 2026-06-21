@@ -406,6 +406,7 @@ h1 {
   --active-width: 36px;
   --active-dot: 0;
   --slide-progress: 0;
+  --slide-progress-width: 0px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -440,15 +441,12 @@ h1 {
   position: absolute;
   left: 18px;
   top: 50%;
-  width: var(--active-width);
+  width: var(--slide-progress-width);
   height: var(--dot-size);
   border-radius: 999px;
   background: var(--control-fg);
-  transform:
-    translate3d(calc(var(--active-dot) * (var(--dot-size) + var(--dot-gap))), -50%, 0)
-    scaleX(var(--slide-progress));
-  transform-origin: left center;
-  transition: transform 120ms linear;
+  transform: translate3d(calc(var(--active-dot) * (var(--dot-size) + var(--dot-gap))), -50%, 0);
+  transition: transform 120ms linear, width 120ms linear;
   will-change: transform;
 }
 
