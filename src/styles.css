@@ -409,6 +409,7 @@ h1 {
   --active-width: 36px;
   --active-dot: 0;
   --slide-progress: 0;
+  --slide-progress-pct: 0%;
   --active-shift: calc(var(--active-dot) * (var(--dot-size) + var(--dot-gap)));
   display: flex;
   align-items: center;
@@ -436,11 +437,10 @@ h1 {
   height: var(--dot-size);
   border-radius: 999px;
   pointer-events: none;
-  transform-origin: left center;
   translate: calc(var(--active-shift) - ((var(--active-width) - var(--dot-size)) / 2)) -50%;
   transition:
     translate 420ms cubic-bezier(0.2, 0, 0, 1),
-    scale 120ms linear;
+    clip-path 120ms linear;
 }
 
 .progress-dots::before {
@@ -449,7 +449,7 @@ h1 {
 
 .progress-dots::after {
   background: var(--control-fg);
-  scale: var(--slide-progress) 1;
+  clip-path: inset(0 calc(100% - var(--slide-progress-pct)) 0 0 round 999px);
 }
 
 .progress-dots button {

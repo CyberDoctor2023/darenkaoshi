@@ -14,6 +14,7 @@ let scrollRaf = 0;
 let scrollEndTimer = 0;
 let hasPrewarmedCarousel = false;
 let carouselVisible = false;
+let carouselStarted = false;
 let playbackIndex = -1;
 let progressFrameRequest = 0;
 let progressFrameVideo = null;
@@ -259,6 +260,7 @@ function prewarmCarouselVideos() {
 }
 
 function activateCarousel() {
+  carouselStarted = true;
   if (carouselVisible) {
     playCurrentVideo();
     return;
@@ -304,11 +306,11 @@ function pauseNonCurrentVideos() {
 }
 
 function playCurrentVideo() {
-  preloadNeighborVideos();
   pauseNonCurrentVideos();
 
   const currentVideo = slides[index]?.querySelector(".screen-video");
-  if (carouselVisible && currentVideo) {
+  if (carouselStarted && carouselVisible && currentVideo) {
+    preloadNeighborVideos();
     if (playbackIndex !== index) {
       resetVideo(currentVideo);
       setSlideProgress(0);
@@ -348,6 +350,22 @@ function setCurrent(nextIndex) {
   progressDots.style.setProperty("--active-dot", index);
   setSlideProgress(0);
   playCurrentVideo();
+}
+
+function setInitialCurrent(nextIndex) {
+  index = (nextIndex + slides.length) % slides.length;
+  previousIndex = -1;
+  slides.forEach((slide, slideIndex) => {
+    const isCurrent = slideIndex === index;
+    slide.classList.toggle("is-current", isCurrent);
+    slide.toggleAttribute("inert", !isCurrent);
+    slide.setAttribute("aria-hidden", String(!isCurrent));
+  });
+  dots.forEach((dot, dotIndex) => {
+    dot.classList.toggle("is-active", dotIndex === index);
+  });
+  progressDots.style.setProperty("--active-dot", index);
+  setSlideProgress(0);
 }
 
 function getDominantSlideIndex() {
@@ -430,19 +448,21 @@ if ("IntersectionObserver" in window && heroVideo) {
 if ("IntersectionObserver" in window) {
   const carouselObserver = new IntersectionObserver(
     ([entry]) => {
-      carouselVisible = entry.isIntersecting;
+      carouselVisible = entry.intersectionRatio >= 0.42;
       if (carouselVisible) {
+        carouselStarted = true;
         prewarmCarouselVideos();
         playCurrentVideo();
       } else {
         playCurrentVideo();
       }
     },
-    { threshold: 0.01 }
+    { threshold: [0, 0.18, 0.42, 0.6] }
   );
   carouselObserver.observe(carousel);
 } else {
   carouselVisible = true;
+  carouselStarted = true;
   playCurrentVideo();
 }
 
@@ -475,5 +495,5 @@ window.addEventListener("pageshow", (event) => {
 });
 
 setMutedVideos();
-setCurrent(0);
-scrollToSlide(0, "auto");
+setInitialCurrent(0);
+track.scrollTo({ left: getSlideSnapLeft(slides[0]), behavior: "auto" });
