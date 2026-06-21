@@ -35,6 +35,7 @@ Key design signals:
 - Layout: dark Apple-inspired canvas, centered content max width around 1260px, horizontal feature carousel cards around 1260x680, current slide centered with adjacent slides partially visible, compact dot controls floating over the gallery like Apple's all-access-pass controls.
 - Site framework: the top global navigation represents the CyberDoctor portfolio shell. `CyberDoctor` is the owner/name and must sit at the far upper-left with a higher visual hierarchy than the project links. `LifeNotes`, `SenseFlow`, and `YouTube` are secondary destinations inside that shell. No second floating LifeNotes local nav is shown.
 - Use-case copy should sit around the visual middle of each card, not pinned to the bottom, with per-slide line breaks and widths chosen to avoid awkward one-character lines.
+- Mobile demos may crop the device vertically to echo the desktop compositions, but must not crop the device horizontally; the phone screen's main information should remain readable.
 - Motion: subtle entrance and scroll reveal, not decorative or loud.
 - Motion: active use-case copy should lag slightly behind the slide/card motion, creating the Apple-like offset between content and background. Bottom dotnav should use a single sliding active capsule rather than resizing individual dots in place.
 - Shape: Figma-sourced iPhone 17 White Portrait frame from node `2:207`; keep the frame as a separate overlay and use a first-frame poster for the screen content before video playback.
@@ -64,6 +65,7 @@ Key design signals:
 - Trackpad horizontal swipes inside the carousel use native snap behavior and do not require custom wheel locking.
 - Use-case copy does not cover the phone screen and is vertically balanced against the demo placement.
 - Mobile layout stacks text then video with no text/video overlap.
+- Mobile device placement only crops top/bottom when cropping is needed; no mobile use case should push the phone beyond the left or right card edge.
 - Design follows the extracted Apple visual language closely enough for a product homepage adaptation.
 - Site declares no AI training/scraping permission through robots directives, response headers, and page metadata, and includes a light client-side guard for obvious AI bot or automated browser access.
 
