@@ -534,10 +534,10 @@ video.is-ready {
 
   .slide .iphone-frame {
     left: auto;
-    right: -18px;
-    top: 158px;
+    right: 24px;
+    top: 160px;
     bottom: auto;
-    --frame-w: min(286px, 72vw);
+    --frame-w: min(260px, 68vw);
     transform: translate3d(0, 0, 0);
   }
 
@@ -554,40 +554,42 @@ video.is-ready {
 
   .slide-left .iphone-frame,
   .slide-crop .iphone-frame {
-    left: -24px;
+    left: 24px;
     right: auto;
   }
 
   .slide-left .iphone-frame {
-    top: 218px;
-    --frame-w: min(300px, 76vw);
+    top: auto;
+    bottom: -72px;
+    --frame-w: min(292px, 74vw);
   }
 
   .slide-center p {
     left: 24px;
-    right: 24px;
-    width: auto;
-    text-align: center;
+    right: auto;
+    width: min(300px, calc(100% - 48px));
+    text-align: left;
   }
 
   .slide-center .iphone-frame {
-    left: 50%;
-    right: auto;
-    top: 210px;
-    --frame-w: min(288px, 73vw);
-    transform: translateX(-50%);
+    left: auto;
+    right: 24px;
+    top: 156px;
+    --frame-w: min(258px, 67vw);
+    transform: translate3d(0, 0, 0);
   }
 
   .slide-wide .iphone-frame {
-    right: -44px;
-    top: 204px;
-    --frame-w: min(328px, 82vw);
+    right: 18px;
+    top: auto;
+    bottom: -94px;
+    --frame-w: min(316px, 80vw);
   }
 
   .slide-crop .iphone-frame {
-    left: -54px;
-    top: 134px;
-    --frame-w: min(326px, 82vw);
+    left: 20px;
+    top: -46px;
+    --frame-w: min(312px, 80vw);
   }
 
   .carousel-controls {
@@ -626,34 +628,37 @@ video.is-ready {
   }
 
   .slide .iphone-frame {
-    top: 154px;
-    --frame-w: min(278px, 74vw);
+    top: 158px;
+    --frame-w: min(252px, 68vw);
   }
 
   .slide-right .iphone-frame {
-    right: -34px;
+    right: 20px;
   }
 
   .slide-left .iphone-frame {
-    left: -38px;
-    top: 214px;
-    --frame-w: min(292px, 78vw);
+    left: 20px;
+    top: auto;
+    bottom: -74px;
+    --frame-w: min(286px, 76vw);
   }
 
   .slide-center .iphone-frame {
-    top: 206px;
-    --frame-w: min(280px, 74vw);
+    right: 20px;
+    top: 158px;
+    --frame-w: min(252px, 67vw);
   }
 
   .slide-wide .iphone-frame {
-    right: -58px;
-    top: 202px;
-    --frame-w: min(318px, 84vw);
+    right: 16px;
+    top: auto;
+    bottom: -96px;
+    --frame-w: min(308px, 82vw);
   }
 
   .slide-crop .iphone-frame {
-    left: -62px;
-    top: 132px;
-    --frame-w: min(316px, 84vw);
+    left: 16px;
+    top: -48px;
+    --frame-w: min(304px, 81vw);
   }
 }
