@@ -1,0 +1,14 @@
+.DS_Store
+*.log
+
+.wrangler/
+.playwright-mcp/
+.omx/
+dist/
+out/
+
+cyberdoctor-*.png
+
+# Generated experiments, not part of the current Cloudflare rollback baseline.
+public/device-media/
+public/device-posters/

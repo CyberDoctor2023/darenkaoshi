@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>CyberDoctor - LifeNotes</title>
+    <link rel="preload" href="./public/posters/intro.jpg" as="image" fetchpriority="high" />
+    <link rel="preload" href="./public/frames/iphone-17-white-portrait.png" as="image" fetchpriority="high" />
+    <link rel="stylesheet" href="./src/styles.css" />
+  </head>
+  <body>
+    <header class="global-nav" aria-label="CyberDoctor">
+      <div class="global-nav-inner">
+        <a class="global-brand" href="#top" aria-label="CyberDoctor home">CyberDoctor</a>
+        <nav class="global-links" aria-label="Portfolio">
+          <a class="is-active" href="#top" aria-current="page">LifeNotes</a>
+          <a href="#senseflow">SenseFlow</a>
+          <a href="#youtube">YouTube</a>
+        </nav>
+      </div>
+    </header>
+
+    <main id="top">
+      <section class="hero">
+        <div class="hero-inner">
+          <h1>一个支持自然语音操控、AI 整理优先级的备忘录</h1>
+          <figure class="hero-demo iphone-frame" aria-label="LifeNotes">
+            <div class="screen">
+              <img class="screen-poster" src="./public/posters/intro.jpg" alt="" aria-hidden="true" fetchpriority="high" />
+              <video
+                src="./public/videos/optimized/intro.mp4"
+                autoplay
+                loop
+                muted
+                playsinline
+                preload="auto"
+              ></video>
+            </div>
+            <img class="device-frame" src="./public/frames/iphone-17-white-portrait.png" alt="" aria-hidden="true" />
+          </figure>
+        </div>
+      </section>
+
+      <section class="use-cases" aria-labelledby="use-case-title">
+        <div class="section-head">
+          <h2 id="use-case-title">Explore use case for lifenotes</h2>
+        </div>
+
+        <div class="carousel" data-carousel>
+          <div class="carousel-track">
+            <article class="slide slide-right is-current">
+              <p>用自然语音和 LifeNotes 交流，<br />以帮你捕捉内容，并整理成清晰的记录。</p>
+              <figure class="iphone-frame">
+                <div class="screen">
+                  <img class="screen-poster" src="./public/posters/use-case-1.jpg" alt="" aria-hidden="true" loading="eager" />
+                  <video
+                    data-src="./public/videos/optimized/use-case-1.mp4"
+                    loop
+                    muted
+                    playsinline
+                    preload="none"
+                  ></video>
+                </div>
+                <img class="device-frame" src="./public/frames/iphone-17-white-portrait.png" alt="" aria-hidden="true" />
+              </figure>
+            </article>
+
+            <article class="slide slide-left">
+              <p>优先级不明确？<br />只需轻轻下拉，lifenotes 就能帮你理清轻重缓急。</p>
+              <figure class="iphone-frame">
+                <div class="screen">
+                  <img class="screen-poster" src="./public/posters/use-case-2.jpg" alt="" aria-hidden="true" loading="lazy" />
+                  <video
+                    data-src="./public/videos/optimized/use-case-2.mp4"
+                    loop
+                    muted
+                    playsinline
+                    preload="none"
+                  ></video>
+                </div>
+                <img class="device-frame" src="./public/frames/iphone-17-white-portrait.png" alt="" aria-hidden="true" />
+              </figure>
+            </article>
+
+            <article class="slide slide-center">
+              <p>笔记太多，忘记放在哪里？<br />只需提问，lifenotes 就能从过往记录中找到相关内容。</p>
+              <figure class="iphone-frame">
+                <div class="screen">
+                  <img class="screen-poster" src="./public/posters/use-case-3.jpg" alt="" aria-hidden="true" loading="lazy" />
+                  <video
+                    data-src="./public/videos/optimized/use-case-3.mp4"
+                    loop
+                    muted
+                    playsinline
+                    preload="none"
+                  ></video>
+                </div>
+                <img class="device-frame" src="./public/frames/iphone-17-white-portrait.png" alt="" aria-hidden="true" />
+              </figure>
+            </article>
+
+            <article class="slide slide-wide">
+              <p>
+                需要更多信息时，LifeNotes 也可以连接外部搜索。<br />从一个链接、一段问题，到一个需要补充背景的想法，<br />都可以帮助你获得更完整的上下文。
+              </p>
+              <figure class="iphone-frame">
+                <div class="screen">
+                  <img class="screen-poster" src="./public/posters/use-case-4.jpg" alt="" aria-hidden="true" loading="lazy" />
+                  <video
+                    data-src="./public/videos/optimized/use-case-4.mp4"
+                    loop
+                    muted
+                    playsinline
+                    preload="none"
+                  ></video>
+                </div>
+                <img class="device-frame" src="./public/frames/iphone-17-white-portrait.png" alt="" aria-hidden="true" />
+              </figure>
+            </article>
+
+            <article class="slide slide-crop">
+              <p>整个系统，都可以用语音交互。<br />删除记录、移动看板、修改事件<br />你只要说出来，LifeNotes 就能做到。</p>
+              <figure class="iphone-frame">
+                <div class="screen">
+                  <img class="screen-poster" src="./public/posters/use-case-5.jpg" alt="" aria-hidden="true" loading="lazy" />
+                  <video
+                    data-src="./public/videos/optimized/use-case-5.mp4"
+                    loop
+                    muted
+                    playsinline
+                    preload="none"
+                  ></video>
+                </div>
+                <img class="device-frame" src="./public/frames/iphone-17-white-portrait.png" alt="" aria-hidden="true" />
+              </figure>
+            </article>
+          </div>
+
+          <div class="carousel-controls" aria-label="Carousel controls">
+            <div class="progress-dots" aria-label="Slides">
+              <button class="is-active" type="button" aria-label="1"></button>
+              <button type="button" aria-label="2"></button>
+              <button type="button" aria-label="3"></button>
+              <button type="button" aria-label="4"></button>
+              <button type="button" aria-label="5"></button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script src="./src/script.js"></script>
+  </body>
+</html>
