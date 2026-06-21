@@ -40,7 +40,7 @@ Key design signals:
 - Typography: hero/section headings around 48px desktop, carousel copy around 28px desktop, secondary/nav around 12-17px.
 - Input: support pointer drag and two-finger/trackpad horizontal gestures through native horizontal scrolling plus CSS Scroll Snap. `scroll-snap-stop: always` should keep fast swipes from skipping over use cases.
 - Performance: only the visible hero/current carousel video should play; offscreen carousel videos should be paused to avoid simultaneous high-resolution video decoding.
-- Perceived loading: each device demo should have a generated first-frame poster from its matching video so the screen is not black before MP4 loading/decoding catches up.
+- Perceived loading: mirror Apple's media stack pattern: keep a first-frame image layer and a video layer in the same positioned stack, then fade/hide the image layer once video data is ready so the screen is not black before MP4 loading/decoding catches up.
 - Playback: when a use case becomes current through dots, native scroll snap, or drag, its demo video should start automatically without requiring the user to press play. No play/pause button is shown.
 - Gesture containment: horizontal carousel gestures should use browser-native scrolling and `overscroll-behavior` instead of custom wheel delta state machines.
 - Native-first audit: keep native scroll snap for movement, CSS transitions for visual motion, and only retain JavaScript where state synchronization is required for video playback, active controls, autoplay, and accessibility attributes.
