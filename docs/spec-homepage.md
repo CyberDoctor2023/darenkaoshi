@@ -52,6 +52,7 @@ Key design signals:
 - Global nav brand is `CyberDoctor`, not `LifeNotes`; it sits at the far upper-left and reads as the primary identity while LifeNotes, SenseFlow, and YouTube read as secondary portfolio destinations.
 - All visible marketing text comes from Keynote pages 2-7.
 - Feature demos use the provided MP4 files and are muted.
+- Feature demos should use the original high-quality muted recordings under `public/videos/`, not the low-bitrate `public/videos/optimized/` transcodes.
 - Use cases switch horizontally in an Apple-like carousel rather than as stacked vertical sections.
 - Demo videos render inside the iPhone 17 frame overlay with matching first-frame posters to prevent black-screen flashes.
 - Carousel dot controls float over the carousel; no play/pause control is shown.
