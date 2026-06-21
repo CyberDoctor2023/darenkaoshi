@@ -517,10 +517,10 @@ video.is-ready {
 
   .slide p {
     left: 24px;
-    right: 24px;
+    right: auto;
     top: 34px;
     bottom: auto;
-    width: auto;
+    width: min(310px, calc(100% - 48px));
     transform: translate3d(0, -10px, 0);
     text-align: left;
     font-size: 21px;
@@ -533,11 +533,37 @@ video.is-ready {
   }
 
   .slide .iphone-frame {
-    left: 50%;
-    right: auto;
+    left: auto;
+    right: 28px;
     top: 172px;
     bottom: auto;
     --frame-w: min(238px, 58vw);
+    transform: translate3d(0, 0, 0);
+  }
+
+  .slide-left p,
+  .slide-crop p {
+    left: auto;
+    right: 24px;
+    text-align: right;
+  }
+
+  .slide-left .iphone-frame,
+  .slide-crop .iphone-frame {
+    left: 28px;
+    right: auto;
+  }
+
+  .slide-center p {
+    left: 24px;
+    right: 24px;
+    width: auto;
+    text-align: center;
+  }
+
+  .slide-center .iphone-frame {
+    left: 50%;
+    right: auto;
     transform: translateX(-50%);
   }
 
@@ -579,11 +605,22 @@ video.is-ready {
     top: 28px;
     font-size: 20px;
     line-height: 25px;
+    width: min(296px, calc(100% - 48px));
   }
 
   .slide .iphone-frame {
     top: 168px;
     --frame-w: min(226px, 60vw);
+  }
+
+  .slide-right .iphone-frame,
+  .slide-wide .iphone-frame {
+    right: 22px;
+  }
+
+  .slide-left .iphone-frame,
+  .slide-crop .iphone-frame {
+    left: 22px;
   }
 
   .slide-wide .iphone-frame,
