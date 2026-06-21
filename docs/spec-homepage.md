@@ -46,6 +46,7 @@ Key design signals:
 - Carousel state: native scroll, trackpad/two-finger gestures, and dot clicks must all update the same active slide, dot indicator, text opacity, and video playback state.
 - Carousel state changes from trackpad/two-finger scrolling should feel immediate, with no extra visual delay compared with dot clicks.
 - Carousel should auto-advance through the five use cases when the current demo video finishes, like Apple's iOS highlights gallery, so users can watch without manually clicking each item; do not use a fixed hard-coded timer.
+- Carousel progress should reflect actually rendered playback on the current video. If a browser advances media time but stops painting new frames, the control must not continue showing a fake smooth play state.
 - Performance: HDR start-frame videos should decode only long enough to paint their first frame, then pause; they must not all loop continuously in the background.
 - Media loading should prewarm nearby carousel videos as compressed browser-cache data while keeping decoding/playback limited to the current slide.
 - Perceived loading: mirror Apple's media stack pattern: keep a first-frame image layer and a video layer in the same positioned stack, then fade/hide the image layer once video data is ready so the screen is not black before MP4 loading/decoding catches up.

@@ -15,6 +15,8 @@ let scrollEndTimer = 0;
 let hasPrewarmedCarousel = false;
 let carouselVisible = false;
 let playbackIndex = -1;
+let progressFrameRequest = 0;
+let progressFrameVideo = null;
 
 function getScreen(video) {
   return video?.closest(".screen");
@@ -58,6 +60,17 @@ function setSlideProgress(value) {
   progressDots.style.setProperty("--slide-progress-pct", `${progress * 100}%`);
 }
 
+function stopRenderedProgress() {
+  if (progressFrameRequest && progressFrameVideo && "cancelVideoFrameCallback" in progressFrameVideo) {
+    progressFrameVideo.cancelVideoFrameCallback(progressFrameRequest);
+  } else if (progressFrameRequest) {
+    window.cancelAnimationFrame(progressFrameRequest);
+  }
+
+  progressFrameRequest = 0;
+  progressFrameVideo = null;
+}
+
 function getVideoSlideIndex(video) {
   const slide = video?.closest(".slide");
   return slides.indexOf(slide);
@@ -68,9 +81,48 @@ function updateSlideProgress(video) {
   setSlideProgress(video.currentTime / video.duration);
 }
 
+function startRenderedProgress(video) {
+  if (!video || getVideoSlideIndex(video) !== index) return;
+
+  stopRenderedProgress();
+  progressFrameVideo = video;
+
+  const keepGoing = () => {
+    return progressFrameVideo === video && getVideoSlideIndex(video) === index && !video.paused && !video.ended && carouselVisible && !document.hidden;
+  };
+
+  if ("requestVideoFrameCallback" in video) {
+    const tick = () => {
+      if (!keepGoing()) {
+        stopRenderedProgress();
+        return;
+      }
+
+      updateSlideProgress(video);
+      progressFrameRequest = video.requestVideoFrameCallback(tick);
+    };
+
+    progressFrameRequest = video.requestVideoFrameCallback(tick);
+    return;
+  }
+
+  const tick = () => {
+    if (!keepGoing()) {
+      stopRenderedProgress();
+      return;
+    }
+
+    updateSlideProgress(video);
+    progressFrameRequest = window.requestAnimationFrame(tick);
+  };
+
+  progressFrameRequest = window.requestAnimationFrame(tick);
+}
+
 function advanceAfterVideoEnd(video) {
   const slideIndex = getVideoSlideIndex(video);
   if (slideIndex !== index || !carouselVisible || document.hidden) return;
+  stopRenderedProgress();
   setSlideProgress(1);
   scrollToSlide((index + 1) % slides.length);
 }
@@ -143,12 +195,26 @@ function setMutedVideos() {
     video.playsInline = true;
     video.addEventListener("loadeddata", () => waitForPaintedFrame(video), { once: true });
     video.addEventListener("canplay", () => waitForPaintedFrame(video));
-    video.addEventListener("playing", () => waitForPaintedFrame(video));
-    video.addEventListener("timeupdate", () => updateSlideProgress(video));
+    video.addEventListener("playing", () => {
+      waitForPaintedFrame(video);
+      if (getVideoSlideIndex(video) === index) startRenderedProgress(video);
+    });
+    video.addEventListener("pause", () => {
+      if (progressFrameVideo === video) stopRenderedProgress();
+    });
     video.addEventListener("ended", () => advanceAfterVideoEnd(video));
-    video.addEventListener("waiting", () => showPoster(video));
-    video.addEventListener("stalled", () => showPoster(video));
-    video.addEventListener("emptied", () => showPoster(video));
+    video.addEventListener("waiting", () => {
+      if (progressFrameVideo === video) stopRenderedProgress();
+      showPoster(video);
+    });
+    video.addEventListener("stalled", () => {
+      if (progressFrameVideo === video) stopRenderedProgress();
+      showPoster(video);
+    });
+    video.addEventListener("emptied", () => {
+      if (progressFrameVideo === video) stopRenderedProgress();
+      showPoster(video);
+    });
   });
 }
 
@@ -158,11 +224,17 @@ function playQuietly(video) {
   loadVideo(video, "auto");
   if (!video.paused) {
     waitForPaintedFrame(video);
+    if (getVideoSlideIndex(video) === index) startRenderedProgress(video);
     return;
   }
   const playPromise = video.play();
   if (playPromise) {
-    playPromise.then(() => waitForPaintedFrame(video)).catch(() => {});
+    playPromise
+      .then(() => {
+        waitForPaintedFrame(video);
+        if (getVideoSlideIndex(video) === index) startRenderedProgress(video);
+      })
+      .catch(() => {});
   }
 }
 
@@ -177,8 +249,12 @@ function prewarmCarouselVideos() {
   hasPrewarmedCarousel = true;
   slides.forEach((slide) => {
     const video = slide.querySelector(".screen-video");
-    if (getVideoSlideIndex(video) === index) return;
-    loadVideo(video, "auto");
+    const slideIndex = getVideoSlideIndex(video);
+    if (slideIndex === index || Math.abs(slideIndex - index) === 1) {
+      loadVideo(video, "auto");
+    } else {
+      loadVideo(video, "metadata");
+    }
   });
 }
 
@@ -256,6 +332,8 @@ function restoreAfterPageResume() {
 }
 
 function setCurrent(nextIndex) {
+  if (nextIndex === index && previousIndex !== -1) return;
+  stopRenderedProgress();
   previousIndex = index;
   index = (nextIndex + slides.length) % slides.length;
   slides.forEach((slide, slideIndex) => {
@@ -272,23 +350,21 @@ function setCurrent(nextIndex) {
   playCurrentVideo();
 }
 
-function getClosestSlideIndex() {
+function getDominantSlideIndex() {
   const trackRect = track.getBoundingClientRect();
-  const trackCenter = trackRect.left + trackRect.width / 2;
-  let closestIndex = index;
-  let closestDistance = Number.POSITIVE_INFINITY;
+  let dominantIndex = index;
+  let dominantWidth = 0;
 
   slides.forEach((slide, slideIndex) => {
     const rect = slide.getBoundingClientRect();
-    const slideCenter = rect.left + rect.width / 2;
-    const distance = Math.abs(slideCenter - trackCenter);
-    if (distance < closestDistance) {
-      closestDistance = distance;
-      closestIndex = slideIndex;
+    const visibleWidth = Math.max(0, Math.min(rect.right, trackRect.right) - Math.max(rect.left, trackRect.left));
+    if (visibleWidth > dominantWidth) {
+      dominantWidth = visibleWidth;
+      dominantIndex = slideIndex;
     }
   });
 
-  return closestIndex;
+  return dominantIndex;
 }
 
 function getSlideSnapLeft(slide) {
@@ -296,7 +372,7 @@ function getSlideSnapLeft(slide) {
 }
 
 function syncCurrentFromScroll() {
-  const nextIndex = getClosestSlideIndex();
+  const nextIndex = getDominantSlideIndex();
   if (nextIndex !== index) {
     setCurrent(nextIndex);
   }
@@ -376,6 +452,7 @@ window.addEventListener("resize", () => {
 
 document.addEventListener("visibilitychange", () => {
   if (document.hidden) {
+    stopRenderedProgress();
     videos.forEach((video) => {
       showPoster(video);
       pauseVideo(video);
@@ -386,6 +463,7 @@ document.addEventListener("visibilitychange", () => {
 });
 
 window.addEventListener("pagehide", () => {
+  stopRenderedProgress();
   videos.forEach((video) => {
     showPoster(video);
     pauseVideo(video);
