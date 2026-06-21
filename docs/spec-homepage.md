@@ -13,6 +13,7 @@ Build a LifeNotes product subpage inside a broader CyberDoctor personal portfoli
 - Do not follow the Keynote/PDF visual formatting; it is a text source only.
 - Do not use the Keynote/PDF slide layout.
 - Do not build out full SenseFlow or YouTube pages in this pass; only expose them in the portfolio navigation framework.
+- Do not treat client-side anti-crawler code as a replacement for Cloudflare WAF, Bot Fight Mode, or Managed Challenge rules.
 
 ## Source Content
 
@@ -41,6 +42,7 @@ Key design signals:
 - Input: support pointer drag and two-finger/trackpad horizontal gestures through native horizontal scrolling plus CSS Scroll Snap. `scroll-snap-stop: always` should keep fast swipes from skipping over use cases.
 - Performance: only the visible hero/current carousel video should play; offscreen carousel videos should be paused to avoid simultaneous high-resolution video decoding.
 - Perceived loading: mirror Apple's media stack pattern: keep a first-frame image layer and a video layer in the same positioned stack, then fade/hide the image layer once video data is ready so the screen is not black before MP4 loading/decoding catches up.
+- Page resume: after lock screen, tab backgrounding, or bfcache restore, keep the first-frame image visible until the browser has actually painted a decoded video frame again; do not hide the poster merely because `canplay` or `playing` fired.
 - Playback: when a use case becomes current through dots, native scroll snap, or drag, its demo video should start automatically without requiring the user to press play. No play/pause button is shown.
 - Gesture containment: horizontal carousel gestures should use browser-native scrolling and `overscroll-behavior` instead of custom wheel delta state machines.
 - Native-first audit: keep native scroll snap for movement, CSS transitions for visual motion, and only retain JavaScript where state synchronization is required for video playback, active controls, autoplay, and accessibility attributes.
@@ -58,10 +60,12 @@ Key design signals:
 - Carousel dot controls float over the carousel; no play/pause control is shown.
 - Carousel controls do not show flickering compositing rectangles.
 - Device demos show stable first-frame posters before playback instead of a black screen flash.
+- Device demos do not reveal a black video layer after iOS lock/unlock or page visibility restore; the poster remains visible until the resumed video paints.
 - Trackpad horizontal swipes inside the carousel use native snap behavior and do not require custom wheel locking.
 - Use-case copy does not cover the phone screen and is vertically balanced against the demo placement.
 - Mobile layout stacks text then video with no text/video overlap.
 - Design follows the extracted Apple visual language closely enough for a product homepage adaptation.
+- Site declares no AI training/scraping permission through robots directives, response headers, and page metadata, and includes a light client-side guard for obvious AI bot or automated browser access.
 
 ## Validation Plan
 
@@ -75,3 +79,4 @@ Key design signals:
 - Verify horizontal trackpad gestures use native scroll snap and cannot skip snap points under normal fast swipes.
 - Check desktop and mobile screenshots for layout, spacing, and text overflow.
 - Run a lightweight file/content review for unintended invented copy.
+- Verify `robots.txt`, HTML metadata, `_headers`, and the client guard script are deployed and do not affect normal human browser access.

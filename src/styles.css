@@ -533,12 +533,12 @@ video.is-ready {
   }
 
   .slide .iphone-frame {
-    left: auto;
-    right: 24px;
+    left: 50%;
+    right: auto;
     top: 160px;
     bottom: auto;
     --frame-w: min(260px, 68vw);
-    transform: translate3d(0, 0, 0);
+    transform: translateX(-50%);
   }
 
   .slide-right p {
@@ -572,24 +572,32 @@ video.is-ready {
   }
 
   .slide-center .iphone-frame {
-    left: auto;
-    right: 24px;
+    left: 50%;
+    right: auto;
     top: 156px;
     --frame-w: min(258px, 67vw);
-    transform: translate3d(0, 0, 0);
+    transform: translateX(-50%);
   }
 
   .slide-wide .iphone-frame {
-    right: 18px;
+    left: 50%;
+    right: auto;
     top: auto;
     bottom: -94px;
     --frame-w: min(316px, 80vw);
+    transform: translateX(-50%);
   }
 
   .slide-crop .iphone-frame {
-    left: 20px;
+    left: -102px;
     top: -46px;
     --frame-w: min(312px, 80vw);
+    transform: translate3d(0, 0, 0);
+  }
+
+  .slide-crop p {
+    top: 300px;
+    width: min(176px, calc(100% - 196px));
   }
 
   .carousel-controls {
@@ -632,10 +640,6 @@ video.is-ready {
     --frame-w: min(252px, 68vw);
   }
 
-  .slide-right .iphone-frame {
-    right: 20px;
-  }
-
   .slide-left .iphone-frame {
     left: 20px;
     top: auto;
@@ -644,21 +648,28 @@ video.is-ready {
   }
 
   .slide-center .iphone-frame {
-    right: 20px;
+    left: 50%;
+    right: auto;
     top: 158px;
     --frame-w: min(252px, 67vw);
   }
 
   .slide-wide .iphone-frame {
-    right: 16px;
+    left: 50%;
+    right: auto;
     top: auto;
     bottom: -96px;
     --frame-w: min(308px, 82vw);
   }
 
   .slide-crop .iphone-frame {
-    left: 16px;
+    left: -116px;
     top: -48px;
     --frame-w: min(304px, 81vw);
+  }
+
+  .slide-crop p {
+    top: 292px;
+    width: min(166px, calc(100% - 190px));
   }
 }
