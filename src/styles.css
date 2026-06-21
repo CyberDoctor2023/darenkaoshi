@@ -511,17 +511,17 @@ video.is-ready {
   }
 
   .slide {
-    height: 640px;
+    height: 720px;
     border-radius: 24px;
   }
 
   .slide p {
     left: 24px;
     right: 24px;
-    bottom: 64px;
-    top: auto;
+    top: 34px;
+    bottom: auto;
     width: auto;
-    transform: translate3d(0, 18px, 0);
+    transform: translate3d(0, -10px, 0);
     text-align: left;
     font-size: 21px;
     line-height: 26px;
@@ -535,20 +535,20 @@ video.is-ready {
   .slide .iphone-frame {
     left: 50%;
     right: auto;
-    top: 34px;
+    top: 172px;
     bottom: auto;
-    --frame-w: 230px;
+    --frame-w: min(238px, 58vw);
     transform: translateX(-50%);
   }
 
   .slide-wide .iphone-frame,
   .slide-crop .iphone-frame {
-    --frame-w: 246px;
-    top: -14px;
+    --frame-w: min(250px, 60vw);
+    top: 186px;
   }
 
   .carousel-controls {
-    bottom: 22px;
+    bottom: 18px;
   }
 
   .progress-dots {
@@ -569,5 +569,26 @@ video.is-ready {
   h1,
   h2 {
     font-size: 34px;
+  }
+
+  .slide {
+    height: 690px;
+  }
+
+  .slide p {
+    top: 28px;
+    font-size: 20px;
+    line-height: 25px;
+  }
+
+  .slide .iphone-frame {
+    top: 168px;
+    --frame-w: min(226px, 60vw);
+  }
+
+  .slide-wide .iphone-frame,
+  .slide-crop .iphone-frame {
+    top: 184px;
+    --frame-w: min(236px, 62vw);
   }
 }
