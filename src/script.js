@@ -10,6 +10,8 @@ const heroVideo = document.querySelector(".hero .screen-video");
 let index = 0;
 let previousIndex = -1;
 let heroVisible = true;
+let scrollRaf = 0;
+let scrollEndTimer = 0;
 
 function getScreen(video) {
   return video?.closest(".screen");
@@ -37,6 +39,24 @@ function showPoster(video) {
   video.dataset.paintToken = "";
   video.classList.remove("is-ready");
   getScreen(video)?.classList.remove("is-video-ready");
+}
+
+function pauseOnFirstPaint(video) {
+  if (!video) return;
+  const markReady = () => {
+    video.classList.add("is-ready");
+    video.pause();
+  };
+
+  if ("requestVideoFrameCallback" in video) {
+    video.requestVideoFrameCallback(() => {
+      requestAnimationFrame(markReady);
+    });
+    return;
+  }
+
+  video.addEventListener("timeupdate", markReady, { once: true });
+  window.setTimeout(markReady, 600);
 }
 
 function waitForPaintedFrame(video) {
@@ -76,10 +96,10 @@ function setMutedVideos() {
     video.defaultMuted = true;
     video.volume = 0;
     video.playsInline = true;
-    video.addEventListener("loadeddata", () => video.classList.add("is-ready"), { once: true });
-    video.addEventListener("playing", () => video.classList.add("is-ready"), { once: true });
+    video.addEventListener("loadeddata", () => pauseOnFirstPaint(video), { once: true });
+    video.addEventListener("playing", () => pauseOnFirstPaint(video), { once: true });
     const playPromise = video.play();
-    if (playPromise) playPromise.catch(() => {});
+    if (playPromise) playPromise.then(() => pauseOnFirstPaint(video)).catch(() => {});
   });
 
   videos.forEach((video) => {
@@ -159,6 +179,30 @@ function setCurrent(nextIndex) {
   updateVideoPlayback();
 }
 
+function getClosestSlideIndex() {
+  const trackRect = track.getBoundingClientRect();
+  const trackCenter = trackRect.left + trackRect.width / 2;
+  let closestIndex = index;
+  let closestDistance = Number.POSITIVE_INFINITY;
+
+  slides.forEach((slide, slideIndex) => {
+    const rect = slide.getBoundingClientRect();
+    const slideCenter = rect.left + rect.width / 2;
+    const distance = Math.abs(slideCenter - trackCenter);
+    if (distance < closestDistance) {
+      closestDistance = distance;
+      closestIndex = slideIndex;
+    }
+  });
+
+  return closestIndex;
+}
+
+function syncCurrentFromScroll() {
+  const nextIndex = getClosestSlideIndex();
+  if (nextIndex !== index) setCurrent(nextIndex);
+}
+
 function scrollToSlide(nextIndex, behavior = "smooth") {
   const boundedIndex = (nextIndex + slides.length) % slides.length;
   const slide = slides[boundedIndex];
@@ -174,6 +218,24 @@ dots.forEach((dot, dotIndex) => {
     scrollToSlide(dotIndex);
   });
 });
+
+track.addEventListener(
+  "scroll",
+  () => {
+    if (!scrollRaf) {
+      scrollRaf = window.requestAnimationFrame(() => {
+        scrollRaf = 0;
+        syncCurrentFromScroll();
+      });
+    }
+
+    window.clearTimeout(scrollEndTimer);
+    scrollEndTimer = window.setTimeout(syncCurrentFromScroll, 90);
+  },
+  { passive: true }
+);
+
+track.addEventListener("scrollend", syncCurrentFromScroll);
 
 if ("IntersectionObserver" in window) {
   const slideObserver = new IntersectionObserver(
