@@ -264,14 +264,12 @@ h1 {
     radial-gradient(circle at 74% 22%, rgba(255, 255, 255, 0.24), rgba(190, 198, 214, 0.12) 17%, transparent 34%),
     var(--card);
   opacity: 0.44;
-  transform: scale(0.986);
-  transition: opacity 300ms ease, transform 620ms cubic-bezier(0.2, 0, 0, 1);
+  transition: opacity 300ms ease;
   contain: layout paint style;
 }
 
 .slide.is-current {
   opacity: 1;
-  transform: scale(1);
 }
 
 .slide p {
@@ -301,92 +299,56 @@ h1 {
 .slide .iphone-frame {
   position: absolute;
   z-index: 1;
-  --frame-w: 286px;
+  top: 48px;
+  --frame-w: 300px;
 }
 
-.slide-right p {
+.slide-device-right p {
   left: 64px;
   top: 50%;
   width: 620px;
   transform: translate3d(-26px, -50%, 0);
 }
 
-.slide-right.is-current p {
+.slide-device-right.is-current p {
   transform: translate3d(0, -50%, 0);
 }
 
-.slide-right .iphone-frame {
-  right: clamp(70px, 12vw, 170px);
-  top: 54px;
+.slide-device-right .iphone-frame {
+  right: 112px;
 }
 
-.slide-left p {
+.slide-device-left p {
   right: 70px;
   top: 50%;
   width: 500px;
   transform: translate3d(26px, -50%, 0);
 }
 
-.slide-left.is-current p {
+.slide-device-left.is-current p {
   transform: translate3d(0, -50%, 0);
 }
 
-.slide-left .iphone-frame {
-  left: clamp(74px, 12vw, 168px);
-  bottom: -84px;
-  --frame-w: 318px;
+.slide-device-left .iphone-frame {
+  left: 112px;
 }
 
-.slide-center p {
-  left: 70px;
-  top: 50%;
-  width: 560px;
-  transform: translate3d(-26px, -50%, 0);
-  text-align: left;
+.slide-device-center p {
+  left: 50%;
+  top: 42px;
+  width: min(760px, calc(100% - 96px));
+  text-align: center;
+  transform: translate3d(-50%, -18px, 0);
 }
 
-.slide-center.is-current p {
-  transform: translate3d(0, -50%, 0);
+.slide-device-center.is-current p {
+  transform: translate3d(-50%, 0, 0);
 }
 
-.slide-center .iphone-frame {
-  right: clamp(82px, 13vw, 176px);
-  top: 44px;
-  --frame-w: 278px;
-}
-
-.slide-wide p {
-  left: 64px;
-  top: 50%;
-  width: 690px;
-  transform: translate3d(-26px, -50%, 0);
-}
-
-.slide-wide.is-current p {
-  transform: translate3d(0, -50%, 0);
-}
-
-.slide-wide .iphone-frame {
-  right: 56px;
-  bottom: -120px;
-  --frame-w: 344px;
-}
-
-.slide-crop p {
-  right: 54px;
-  top: 50%;
-  width: 520px;
-  transform: translate3d(26px, -50%, 0);
-}
-
-.slide-crop.is-current p {
-  transform: translate3d(0, -50%, 0);
-}
-
-.slide-crop .iphone-frame {
-  left: 72px;
-  top: -64px;
-  --frame-w: 346px;
+.slide-device-center .iphone-frame {
+  left: 50%;
+  top: 142px;
+  transform: translateX(-50%);
 }
 
 .carousel-controls {
@@ -404,52 +366,23 @@ h1 {
 }
 
 .progress-dots {
-  --dot-size: 7px;
-  --dot-gap: 12px;
-  --active-width: 36px;
-  --active-dot: 0;
+  --dot-size: 8px;
+  --dot-gap: 16px;
+  --active-width: 48px;
   --slide-progress: 0;
-  --slide-progress-pct: 0%;
-  --active-shift: calc(var(--active-dot) * (var(--dot-size) + var(--dot-gap)));
   display: flex;
   align-items: center;
   justify-content: center;
   gap: var(--dot-gap);
-  height: 44px;
-  min-width: 168px;
-  padding: 0 18px;
+  height: 56px;
+  width: 176px;
+  padding: 0 16px;
   border-radius: 999px;
-  background: rgba(67, 67, 70, 0.92);
+  background: rgba(42, 42, 45, 0.72);
   pointer-events: auto;
   overflow: hidden;
   transform: translateZ(0);
   position: relative;
-}
-
-.progress-dots::before,
-.progress-dots::after {
-  content: "";
-  position: absolute;
-  left: 18px;
-  top: 50%;
-  z-index: 1;
-  width: var(--active-width);
-  height: var(--dot-size);
-  border-radius: 999px;
-  pointer-events: none;
-  translate: calc(var(--active-shift) - ((var(--active-width) - var(--dot-size)) / 2)) -50%;
-  transition:
-    translate 420ms cubic-bezier(0.2, 0, 0, 1),
-    clip-path 120ms linear;
-}
-
-.progress-dots::before {
-  background: rgba(245, 245, 247, 0.32);
-}
-
-.progress-dots::after {
-  background: var(--control-fg);
-  clip-path: inset(0 calc(100% - var(--slide-progress-pct)) 0 0 round 999px);
 }
 
 .progress-dots button {
@@ -472,17 +405,35 @@ h1 {
 
 .progress-dots button {
   position: relative;
-  z-index: 2;
+  flex: 0 0 var(--dot-size);
   width: var(--dot-size);
   height: var(--dot-size);
   border-radius: 999px;
-  background: rgba(245, 245, 247, 0.46);
-  opacity: 1;
-  transition: opacity 180ms ease, background 180ms ease;
+  background: rgba(245, 245, 247, 0.8);
+  overflow: hidden;
+  transform: translateZ(0);
+  transition:
+    flex-basis 420ms cubic-bezier(0.2, 0, 0, 1),
+    width 420ms cubic-bezier(0.2, 0, 0, 1),
+    background-color 180ms ease;
 }
 
 .progress-dots button.is-active {
-  opacity: 0;
+  flex-basis: var(--active-width);
+  width: var(--active-width);
+  background: rgba(245, 245, 247, 0.8);
+}
+
+.progress-dots button.is-active::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--control-fg);
+  transform: scaleX(var(--slide-progress));
+  transform-origin: left center;
+  transition: transform 250ms linear;
+  will-change: transform;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -571,69 +522,27 @@ h1 {
   .slide .iphone-frame {
     left: 50%;
     right: auto;
-    top: 160px;
+    top: 190px;
     bottom: auto;
     --frame-w: min(260px, calc(100% - 56px));
     transform: translateX(-50%);
   }
 
-  .slide-right p {
-    width: min(260px, calc(100% - 92px));
-  }
-
-  .slide-left p,
-  .slide-crop p {
+  .slide-device-left p,
+  .slide-device-right p,
+  .slide-device-center p {
     left: 24px;
     right: auto;
+    top: 34px;
     text-align: left;
     width: min(310px, calc(100% - 48px));
+    transform: translate3d(0, -10px, 0);
   }
 
-  .slide-left .iphone-frame,
-  .slide-crop .iphone-frame {
-    left: 50%;
-    right: auto;
-    transform: translateX(-50%);
-  }
-
-  .slide-left .iphone-frame {
-    top: auto;
-    bottom: -72px;
-    --frame-w: min(292px, calc(100% - 56px));
-  }
-
-  .slide-center p {
-    left: 24px;
-    right: auto;
-    width: min(300px, calc(100% - 48px));
-    text-align: left;
-  }
-
-  .slide-center .iphone-frame {
-    left: 50%;
-    right: auto;
-    top: 156px;
-    --frame-w: min(258px, calc(100% - 56px));
-    transform: translateX(-50%);
-  }
-
-  .slide-wide .iphone-frame {
-    left: 50%;
-    right: auto;
-    top: auto;
-    bottom: -150px;
-    --frame-w: min(316px, calc(100% - 48px));
-    transform: translateX(-50%);
-  }
-
-  .slide-crop .iphone-frame {
-    top: -190px;
-    --frame-w: min(312px, calc(100% - 48px));
-  }
-
-  .slide-crop p {
-    top: 452px;
-    width: min(310px, calc(100% - 48px));
+  .slide-device-left.is-current p,
+  .slide-device-right.is-current p,
+  .slide-device-center.is-current p {
+    transform: translate3d(0, 0, 0);
   }
 
   .carousel-controls {
@@ -641,11 +550,10 @@ h1 {
   }
 
   .progress-dots {
-    --dot-gap: 10px;
-    --active-width: 32px;
-    height: 42px;
-    min-width: 154px;
-    padding: 0 16px;
+    --dot-gap: 14px;
+    --active-width: 42px;
+    width: 160px;
+    height: 48px;
   }
 
 }
@@ -668,40 +576,8 @@ h1 {
   }
 
   .slide .iphone-frame {
-    top: 158px;
+    top: 190px;
     --frame-w: min(252px, calc(100% - 48px));
   }
 
-  .slide-left .iphone-frame {
-    left: 50%;
-    top: auto;
-    bottom: -74px;
-    --frame-w: min(286px, calc(100% - 48px));
-  }
-
-  .slide-center .iphone-frame {
-    left: 50%;
-    right: auto;
-    top: 158px;
-    --frame-w: min(252px, calc(100% - 48px));
-  }
-
-  .slide-wide .iphone-frame {
-    left: 50%;
-    right: auto;
-    top: auto;
-    bottom: -166px;
-    --frame-w: min(308px, calc(100% - 40px));
-  }
-
-  .slide-crop .iphone-frame {
-    left: 50%;
-    top: -210px;
-    --frame-w: min(304px, calc(100% - 40px));
-  }
-
-  .slide-crop p {
-    top: 462px;
-    width: min(296px, calc(100% - 48px));
-  }
 }

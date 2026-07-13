@@ -58,7 +58,6 @@ function showPoster(video) {
 function setSlideProgress(value) {
   const progress = Math.max(0, Math.min(1, value));
   progressDots.style.setProperty("--slide-progress", progress);
-  progressDots.style.setProperty("--slide-progress-pct", `${progress * 100}%`);
 }
 
 function stopRenderedProgress() {
@@ -347,7 +346,6 @@ function setCurrent(nextIndex) {
   dots.forEach((dot, dotIndex) => {
     dot.classList.toggle("is-active", dotIndex === index);
   });
-  progressDots.style.setProperty("--active-dot", index);
   setSlideProgress(0);
   playCurrentVideo();
 }
@@ -364,7 +362,6 @@ function setInitialCurrent(nextIndex) {
   dots.forEach((dot, dotIndex) => {
     dot.classList.toggle("is-active", dotIndex === index);
   });
-  progressDots.style.setProperty("--active-dot", index);
   setSlideProgress(0);
 }
 

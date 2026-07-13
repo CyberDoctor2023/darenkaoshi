@@ -17,6 +17,7 @@ Build a LifeNotes product subpage inside a broader CyberDoctor personal portfoli
 
 ## Source Content
 
+- Browser/page title: `LifeNotes：一个支持自然语音交互、AI 排优先级的备忘录`
 - Page 2 hero: `一个支持自然语音操控的AI备忘录`
 - Page 3 section title: `Explore use case for lifenotes`
 - Page 3 copy: `用自然语音和 LifeNotes 交流，\n以帮你捕捉内容，并整理成清晰的记录。`
@@ -38,8 +39,12 @@ Key design signals:
 - Mobile demos may crop the device vertically to echo the desktop compositions, but must not crop the device horizontally; the phone screen's main information should remain readable.
 - Hero headline should be centered within its text area.
 - Motion: subtle entrance and scroll reveal, not decorative or loud.
-- Motion: active use-case copy should lag slightly behind the slide/card motion, creating the Apple-like offset between content and background. Bottom dotnav should use a single sliding active capsule rather than resizing individual dots in place.
+- Motion: active use-case copy should lag slightly behind the slide/card motion, creating the Apple-like offset between content and background. Bottom dotnav should read as one active capsule moving through the dot row, with neighboring dots smoothly making room for it.
+- Motion: the bottom dotnav's active capsule must occupy the active button's real flex slot and fill from left to right inside its own rounded clipping boundary. Neighboring dots should shift through layout as the active slot changes; do not position a wide overlay with index-based pixel arithmetic, because the first and last items can be clipped or visually misaligned.
 - Shape: Figma-sourced iPhone 17 White Portrait frame from node `2:207`; keep the frame as a separate overlay and use a first-frame poster for the screen content before video playback.
+- Device composition system: all desktop use-case devices use one `300px` frame width. Device placement has exactly three reusable templates: left (`112px` from the card's left edge, `48px` from the top), right (`112px` from the right edge, `48px` from the top), and center (horizontally centered, `142px` from the top to leave a fixed headline lane). Slides may select a template but may not override the outer frame size or anchor per use case. Any content-specific adjustment belongs inside the screen crop, not on the device frame.
+- Device composition system: inactive cards must not scale the whole slide or device. Focus changes may use opacity and copy motion, but the device's rendered size and anchor stay constant throughout horizontal scrolling.
+- Device composition system: on mobile, every device is horizontally centered at one shared width and a `190px` top baseline. Cropping may occur only at the card's top or bottom; no use case gets an independent horizontal offset or frame scale.
 - Typography: hero/section headings around 48px desktop, carousel copy around 28px desktop, secondary/nav around 12-17px.
 - Input: support pointer drag and two-finger/trackpad horizontal gestures through native horizontal scrolling plus CSS Scroll Snap. `scroll-snap-stop: always` should keep fast swipes from skipping over use cases.
 - Performance: only the visible hero/current carousel video should play; offscreen carousel videos should be paused to avoid simultaneous high-resolution video decoding.
@@ -70,6 +75,8 @@ Key design signals:
 - Demo videos render inside the iPhone 17 frame overlay with matching first-frame posters to prevent black-screen flashes.
 - Carousel dot controls float over the carousel; no play/pause control is shown.
 - Carousel controls do not show flickering compositing rectangles.
+- The first use-case progress capsule has fully rounded ends at every progress value, remains centered in the dot row, and uses the same geometry as the other four use cases.
+- Carousel controls follow the measured Apple gallery proportions: `56px` outer height, `8px` dots, `16px` gaps, and a `48px` active progress slot; the five-item control width is derived from those tokens rather than manually stretched.
 - Device demos show stable first-frame posters before playback instead of a black screen flash.
 - Refreshing the page should keep a matching first-frame image visible while videos reload.
 - Poster-to-video transitions should not show an SDR-to-HDR flash; use matching HDR HEVC start-frame video layers before revealing the main HDR videos, with JPG posters only as the earliest fallback.
