@@ -1,4 +1,7 @@
 (function () {
+  const localDevelopmentHosts = new Set(["localhost", "127.0.0.1", "[::1]"]);
+  if (localDevelopmentHosts.has(window.location.hostname)) return;
+
   const blockedPattern =
     /(GPTBot|ChatGPT-User|OAI-SearchBot|ClaudeBot|Claude-User|anthropic-ai|PerplexityBot|Google-Extended|CCBot|Bytespider|Amazonbot|Meta-ExternalAgent|meta-externalagent|Diffbot|PetalBot|YouBot|YandexBot|SemrushBot|AhrefsBot|MJ12bot)/i;
 

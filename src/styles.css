@@ -8,6 +8,8 @@
   --blue: #2997ff;
   --control-bg: rgba(245, 245, 247, 0.16);
   --control-fg: #f5f5f7;
+  --font-display: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-text: "Helvetica Neue", Helvetica, Arial, sans-serif;
   --slide-width: min(1260px, calc(100vw - 180px));
   --slide-gap: 20px;
   --nav-h: 44px;
@@ -29,7 +31,7 @@ body {
   overflow-x: hidden;
   background: var(--page);
   color: var(--ink);
-  font-family: Helvetica, "Helvetica Neue", "SF Pro Text", "PingFang SC", "Hiragino Sans GB", sans-serif;
+  font-family: var(--font-text);
   letter-spacing: 0;
   overscroll-behavior-x: none;
   -webkit-font-smoothing: antialiased;
@@ -121,6 +123,7 @@ figure {
 
 h1,
 h2 {
+  font-family: var(--font-display);
   font-size: 48px;
   font-weight: 600;
   line-height: 1.0835;
@@ -277,6 +280,7 @@ h1 {
   z-index: 2;
   width: min(600px, calc(100% - 96px));
   color: rgba(245, 245, 247, 0.92);
+  font-family: var(--font-display);
   font-size: 28px;
   font-weight: 600;
   line-height: 32px;

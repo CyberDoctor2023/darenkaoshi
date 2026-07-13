@@ -32,7 +32,7 @@ Build a LifeNotes product subpage inside a broader CyberDoctor personal portfoli
 
 Key design signals:
 - Colors: `#ffffff`, `#f5f5f7`, `#1d1d1f`, `#000000`, `#6e6e73`, accent `#0071e3`.
-- Typography: Apple-style SF Pro Text/Display; this implementation uses Helvetica/Helvetica Neue as requested.
+- Typography: use the approved Helvetica/Arial system stack while borrowing only Apple's scale, weight, line-height, and spacing relationships.
 - Layout: dark Apple-inspired canvas, centered content max width around 1260px, horizontal feature carousel cards around 1260x680, current slide centered with adjacent slides partially visible, compact dot controls floating over the gallery like Apple's all-access-pass controls.
 - Site framework: the top global navigation represents the CyberDoctor portfolio shell. `CyberDoctor` is the owner/name and must sit at the far upper-left with a higher visual hierarchy than the project links. `LifeNotes`, `SenseFlow`, and `YouTube` are secondary destinations inside that shell. No second floating LifeNotes local nav is shown.
 - Use-case copy should sit around the visual middle of each card, not pinned to the bottom, with per-slide line breaks and widths chosen to avoid awkward one-character lines.
@@ -45,7 +45,7 @@ Key design signals:
 - Device composition system: all desktop use-case devices use one `300px` frame width. Device placement has exactly three reusable templates: left (`112px` from the card's left edge, `48px` from the top), right (`112px` from the right edge, `48px` from the top), and center (horizontally centered, `142px` from the top to leave a fixed headline lane). Slides may select a template but may not override the outer frame size or anchor per use case. Any content-specific adjustment belongs inside the screen crop, not on the device frame.
 - Device composition system: inactive cards must not scale the whole slide or device. Focus changes may use opacity and copy motion, but the device's rendered size and anchor stay constant throughout horizontal scrolling.
 - Device composition system: on mobile, every device is horizontally centered at one shared width and a `190px` top baseline. Cropping may occur only at the card's top or bottom; no use case gets an independent horizontal offset or frame scale.
-- Typography: hero/section headings around 48px desktop, carousel copy around 28px desktop, secondary/nav around 12-17px.
+- Typography: use only the project-approved generic stack `Helvetica Neue`, Helvetica, Arial, sans-serif. Do not reference, bundle, or distribute SF Pro, PingFang, or other Apple-owned font assets. Apple is a reference only for measured typography proportions: headings `48px/52px/600`, carousel copy `28px/32px/600`, and compact navigation `12-17px` as appropriate.
 - Input: support pointer drag and two-finger/trackpad horizontal gestures through native horizontal scrolling plus CSS Scroll Snap. `scroll-snap-stop: always` should keep fast swipes from skipping over use cases.
 - Performance: only the visible hero/current carousel video should play; offscreen carousel videos should be paused to avoid simultaneous high-resolution video decoding.
 - Carousel state: native scroll, trackpad/two-finger gestures, and dot clicks must all update the same active slide, dot indicator, text opacity, and video playback state.
@@ -87,6 +87,7 @@ Key design signals:
 - Mobile device placement only crops top/bottom when cropping is needed; no mobile use case should push the phone beyond the left or right card edge.
 - Design follows the extracted Apple visual language closely enough for a product homepage adaptation.
 - Site declares no AI training/scraping permission through robots directives, response headers, and page metadata, and includes a light client-side guard for obvious AI bot or automated browser access.
+- The client-side crawler guard is bypassed only on loopback development hosts (`localhost`, `127.0.0.1`, and `[::1]`) so local visual QA works. It remains active on `cyberdoctor.me` and every other deployed hostname; production headers and robots directives are unchanged.
 
 ## Validation Plan
 
