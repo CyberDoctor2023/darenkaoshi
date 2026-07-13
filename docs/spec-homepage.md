@@ -4,6 +4,10 @@
 
 Build a LifeNotes product subpage inside a broader CyberDoctor personal portfolio site using the supplied Keynote text and video assets. The page should borrow the interaction structure of Apple's iOS page at `https://www.apple.com/os/ios/?version=no-hero`: a global portfolio nav, Helvetica/SF-like typography, and a horizontal use-case carousel with the current demo centered and neighboring demos peeking at the sides. The visual palette should return to the black Apple-like presentation with the soft glow treatment behind the phone demos.
 
+Media replacement record (2026-07-14): replaced the six main demo recordings from `public/新的替换视频/` while preserving HEVC Main 10 BT.2020/PQ and muted playback. Regenerated the matching static first-frame JPGs at `1206x2622`; no page structure, carousel logic, loading policy, or animation was changed.
+
+Media delivery record (2026-07-14): version media URLs when replacing immutable Cloudflare Pages assets. Keep the HTML entrypoint revalidating, source files on a short cache, and versioned posters/videos/frames on a one-year immutable cache.
+
 ## Non-Goals
 
 - Do not implement the PRD content from Keynote page 1.
