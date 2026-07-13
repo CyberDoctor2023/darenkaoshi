@@ -46,7 +46,7 @@ Local page inspected in EGO at `http://localhost:5173/`:
 
 ## Motion And Control Evidence
 
-- Apple caption sampling during a gallery transition kept both outgoing and incoming captions at `opacity: 1`; their screen position changed with the native gallery scroll instead of a delayed secondary text reveal.
+- Apple caption sampling kept outgoing and incoming captions at `opacity: 1`, but the caption wrapper applies additional scroll-linked parallax. Its transform changes by about `162px` per gallery progress step while cards are about `1277px` apart. The correct adaptation is continuous scroll-progress translation, not a delayed active-class reveal and not rigid attachment to the card.
 - Apple's `56px` control measured `112px` above the bottom of its `680px` authored card, inside a content-safe lower region. LifeNotes phones extend through that region, so its control should use a dedicated lane below the card rather than covering the device.
 
 ## Constraints

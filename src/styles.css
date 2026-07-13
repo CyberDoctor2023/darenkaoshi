@@ -279,6 +279,7 @@ h1 {
   font-weight: 600;
   line-height: 32px;
   text-wrap: balance;
+  will-change: transform;
 }
 
 .slide .iphone-frame {

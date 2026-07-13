@@ -6,6 +6,8 @@ const progressDots = carousel.querySelector(".progress-dots");
 const videos = [...document.querySelectorAll(".screen-video")];
 const posterVideos = [...document.querySelectorAll(".screen-poster-video")];
 const heroVideo = document.querySelector(".hero .screen-video");
+const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+const copyParallaxDistance = 160;
 
 let index = 0;
 let previousIndex = -1;
@@ -19,6 +21,8 @@ let progressFrameRequest = 0;
 let progressFrameVideo = null;
 let mediaMaintenanceRequest = 0;
 let mediaMaintenanceUsesIdleCallback = false;
+let slideSnapPositions = [];
+let slideStep = 1;
 
 function getScreen(video) {
   return video?.closest(".screen");
@@ -386,15 +390,13 @@ function setInitialCurrent(nextIndex) {
 }
 
 function getDominantSlideIndex() {
-  const trackRect = track.getBoundingClientRect();
   let dominantIndex = index;
-  let dominantWidth = 0;
+  let nearestDistance = Infinity;
 
-  slides.forEach((slide, slideIndex) => {
-    const rect = slide.getBoundingClientRect();
-    const visibleWidth = Math.max(0, Math.min(rect.right, trackRect.right) - Math.max(rect.left, trackRect.left));
-    if (visibleWidth > dominantWidth) {
-      dominantWidth = visibleWidth;
+  slideSnapPositions.forEach((snapLeft, slideIndex) => {
+    const distance = Math.abs(snapLeft - track.scrollLeft);
+    if (distance < nearestDistance) {
+      nearestDistance = distance;
       dominantIndex = slideIndex;
     }
   });
@@ -406,6 +408,25 @@ function getSlideSnapLeft(slide) {
   return slide.offsetLeft + slide.offsetWidth / 2 - track.clientWidth / 2;
 }
 
+function refreshSlideMetrics() {
+  slideSnapPositions = slides.map(getSlideSnapLeft);
+  slideStep = slideSnapPositions.length > 1 ? slideSnapPositions[1] - slideSnapPositions[0] : 1;
+}
+
+function updateCopyParallax() {
+  if (reducedMotion.matches || !slideStep) {
+    slides.forEach((slide) => {
+      slide.querySelector("p").style.translate = "";
+    });
+    return;
+  }
+
+  slides.forEach((slide, slideIndex) => {
+    const progress = (slideSnapPositions[slideIndex] - track.scrollLeft) / slideStep;
+    slide.querySelector("p").style.translate = `${progress * copyParallaxDistance}px 0`;
+  });
+}
+
 function syncCurrentFromScroll() {
   const nextIndex = getDominantSlideIndex();
   if (nextIndex !== index) {
@@ -415,9 +436,8 @@ function syncCurrentFromScroll() {
 
 function scrollToSlide(nextIndex, behavior = "smooth") {
   const boundedIndex = (nextIndex + slides.length) % slides.length;
-  const slide = slides[boundedIndex];
   track.scrollTo({
-    left: slide.offsetLeft + slide.offsetWidth / 2 - track.clientWidth / 2,
+    left: slideSnapPositions[boundedIndex],
     behavior,
   });
   setCurrent(boundedIndex);
@@ -436,6 +456,7 @@ track.addEventListener(
     if (!scrollRaf) {
       scrollRaf = window.requestAnimationFrame(() => {
         scrollRaf = 0;
+        updateCopyParallax();
         syncCurrentFromScroll();
       });
     }
@@ -480,8 +501,14 @@ if ("IntersectionObserver" in window) {
 }
 
 window.addEventListener("resize", () => {
-  window.requestAnimationFrame(() => scrollToSlide(index, "auto"));
+  window.requestAnimationFrame(() => {
+    refreshSlideMetrics();
+    scrollToSlide(index, "auto");
+    updateCopyParallax();
+  });
 });
+
+reducedMotion.addEventListener("change", updateCopyParallax);
 
 document.addEventListener("visibilitychange", () => {
   if (document.hidden) {
@@ -509,5 +536,7 @@ window.addEventListener("pageshow", (event) => {
 });
 
 setMutedVideos();
+refreshSlideMetrics();
 setInitialCurrent(0);
-track.scrollTo({ left: getSlideSnapLeft(slides[0]), behavior: "auto" });
+track.scrollTo({ left: slideSnapPositions[0], behavior: "auto" });
+updateCopyParallax();
