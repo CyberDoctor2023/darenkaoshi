@@ -495,7 +495,7 @@ h1 {
   .slide .iphone-frame {
     left: 50%;
     right: auto;
-    top: 190px;
+    top: 174px;
     bottom: auto;
     --frame-w: min(260px, calc(100% - 56px));
     transform: translateX(-50%);
@@ -543,7 +543,7 @@ h1 {
   }
 
   .slide .iphone-frame {
-    top: 190px;
+    top: 174px;
     --frame-w: min(252px, calc(100% - 48px));
   }
 

@@ -23,6 +23,7 @@ let mediaMaintenanceRequest = 0;
 let mediaMaintenanceUsesIdleCallback = false;
 let slideSnapPositions = [];
 let slideStep = 1;
+let pageScrollEndTimer = 0;
 
 function getScreen(video) {
   return video?.closest(".screen");
@@ -434,6 +435,13 @@ function syncCurrentFromScroll() {
   }
 }
 
+function finishCarouselScroll() {
+  syncCurrentFromScroll();
+  if (carouselVisible) {
+    activateCarousel();
+  }
+}
+
 function scrollToSlide(nextIndex, behavior = "smooth") {
   const boundedIndex = (nextIndex + slides.length) % slides.length;
   track.scrollTo({
@@ -462,12 +470,12 @@ track.addEventListener(
     }
 
     window.clearTimeout(scrollEndTimer);
-    scrollEndTimer = window.setTimeout(syncCurrentFromScroll, 90);
+    scrollEndTimer = window.setTimeout(finishCarouselScroll, 160);
   },
   { passive: true }
 );
 
-track.addEventListener("scrollend", syncCurrentFromScroll);
+track.addEventListener("scrollend", finishCarouselScroll);
 
 if ("IntersectionObserver" in window && heroVideo) {
   const heroObserver = new IntersectionObserver(
@@ -483,15 +491,10 @@ if ("IntersectionObserver" in window && heroVideo) {
 if ("IntersectionObserver" in window) {
   const carouselObserver = new IntersectionObserver(
     ([entry]) => {
-      carouselVisible = entry.intersectionRatio >= 0.42;
-      if (carouselVisible) {
-        carouselStarted = true;
-        playCurrentVideo();
-      } else {
-        playCurrentVideo();
-      }
+      carouselVisible = entry.intersectionRatio >= 0.82;
+      playCurrentVideo();
     },
-    { threshold: [0, 0.18, 0.42, 0.6] }
+    { threshold: [0, 0.18, 0.42, 0.6, 0.82] }
   );
   carouselObserver.observe(carousel);
 } else {
@@ -499,6 +502,18 @@ if ("IntersectionObserver" in window) {
   carouselStarted = true;
   playCurrentVideo();
 }
+
+function schedulePageScrollActivation() {
+  window.clearTimeout(pageScrollEndTimer);
+  pageScrollEndTimer = window.setTimeout(() => {
+    if (carouselVisible) {
+      activateCarousel();
+    }
+  }, 180);
+}
+
+window.addEventListener("scroll", schedulePageScrollActivation, { passive: true });
+window.addEventListener("scrollend", schedulePageScrollActivation, { passive: true });
 
 window.addEventListener("resize", () => {
   window.requestAnimationFrame(() => {

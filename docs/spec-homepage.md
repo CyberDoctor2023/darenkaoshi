@@ -22,7 +22,7 @@ Media delivery record (2026-07-14): version media URLs when replacing immutable 
 ## Source Content
 
 - Browser/page title: `LifeNotes：一个支持自然语音交互、AI 排优先级的备忘录`
-- Page 2 hero: `一个支持自然语音操控的AI备忘录`
+- Page 2 hero: `一个支持自然语音交互的AI备忘录`
 - Page 3 section title: `Explore use case for lifenotes`
 - Page 3 copy: `用自然语音和 LifeNotes 交流，\n以帮你捕捉内容，并整理成清晰的记录。`
 - Page 4 copy: `优先级不明确？\n只需轻轻下拉，lifenotes 就能帮你理清轻重缓急。`
@@ -48,7 +48,7 @@ Key design signals:
 - Shape: Figma-sourced iPhone 17 White Portrait frame from node `2:207`; keep the frame as a separate overlay and use a first-frame poster for the screen content before video playback.
 - Device composition system: all desktop use-case devices use one `300px` frame width. Device placement has exactly three reusable templates: left (`112px` from the card's left edge, `48px` from the top), right (`112px` from the right edge, `48px` from the top), and center (horizontally centered, `142px` from the top to leave a fixed headline lane). Slides may select a template but may not override the outer frame size or anchor per use case. Any content-specific adjustment belongs inside the screen crop, not on the device frame.
 - Device composition system: inactive cards must not scale the whole slide or device. Focus changes may use opacity and copy motion, but the device's rendered size and anchor stay constant throughout horizontal scrolling.
-- Device composition system: on mobile, every device is horizontally centered at one shared width and a `190px` top baseline. Cropping may occur only at the card's top or bottom; no use case gets an independent horizontal offset or frame scale.
+- Device composition system: on mobile, every device is horizontally centered at one shared width and a `174px` top baseline so the shared phone frame stays inside the card's bottom edge. Cropping may occur only at the card's top or bottom; no use case gets an independent horizontal offset or frame scale.
 - Typography: use only the project-approved generic stack `Helvetica Neue`, Helvetica, Arial, sans-serif. Do not reference, bundle, or distribute SF Pro, PingFang, or other Apple-owned font assets. Apple is a reference only for measured typography proportions: headings `48px/52px/600`, carousel copy `28px/32px/600`, and compact navigation `12-17px` as appropriate.
 - Input: support pointer drag and two-finger/trackpad horizontal gestures through native horizontal scrolling plus CSS Scroll Snap. `scroll-snap-stop: always` should keep fast swipes from skipping over use cases.
 - Performance: only the visible hero/current carousel video should play; offscreen carousel videos should be paused to avoid simultaneous high-resolution video decoding.
@@ -56,6 +56,7 @@ Key design signals:
 - Carousel state changes from trackpad/two-finger scrolling should feel immediate, with no extra visual delay compared with dot clicks.
 - Carousel should auto-advance through the five use cases when the current demo video finishes, like Apple's iOS highlights gallery, so users can watch without manually clicking each item; do not use a fixed hard-coded timer.
 - Carousel videos and their progress should remain idle while the user is still viewing the hero above; start the use-case playback only after the carousel is meaningfully visible or the user explicitly interacts with it.
+- Carousel playback activation: entering the carousel viewport alone must not start the current video's clock. After vertical page scrolling settles with the carousel meaningfully visible, activate only the current card; after a horizontal native-snap transition settles, activate the newly current card. Neighboring cards may be metadata-prepared but must not play.
 - Carousel progress should reflect actually rendered playback on the current video. If a browser advances media time but stops painting new frames, the control must not continue showing a fake smooth play state.
 - Performance: use-case cards follow Apple's start-frame architecture with a static first-frame image and one main video. Do not create or autoplay separate use-case start-frame MP4 layers.
 - Media loading: all use-case videos start with no `src`, `preload="none"`, and no autoplay. Assign and load the source for the current slide after the carousel is meaningfully visible or explicitly activated. Once current playback is stable, prepare only the next slide during browser idle time so forward manual and automatic transitions do not cold-start HDR decoding inside the motion-critical path.
