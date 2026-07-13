@@ -12,7 +12,6 @@ let previousIndex = -1;
 let heroVisible = true;
 let scrollRaf = 0;
 let scrollEndTimer = 0;
-let hasPrewarmedCarousel = false;
 let carouselVisible = false;
 let carouselStarted = false;
 let playbackIndex = -1;
@@ -220,7 +219,6 @@ function setMutedVideos() {
 
 function playQuietly(video) {
   if (!video) return;
-  video.autoplay = true;
   loadVideo(video, "auto");
   if (!video.paused) {
     waitForPaintedFrame(video);
@@ -244,18 +242,12 @@ function pauseVideo(video, restoreFallback = false) {
   if (restoreFallback) showPoster(video);
 }
 
-function prewarmCarouselVideos() {
-  if (hasPrewarmedCarousel) return;
-  hasPrewarmedCarousel = true;
-  slides.forEach((slide) => {
-    const video = slide.querySelector(".screen-video");
-    const slideIndex = getVideoSlideIndex(video);
-    if (slideIndex === index || Math.abs(slideIndex - index) === 1) {
-      loadVideo(video, "auto");
-    } else {
-      loadVideo(video, "metadata");
-    }
-  });
+function unloadVideo(video) {
+  if (!video || !video.hasAttribute("src")) return;
+  pauseVideo(video, true);
+  video.removeAttribute("src");
+  video.preload = "none";
+  video.load();
 }
 
 function activateCarousel() {
@@ -284,23 +276,11 @@ function resetVideo(video) {
   video.addEventListener("loadedmetadata", reset, { once: true });
 }
 
-function preloadNeighborVideos() {
-  slides.forEach((slide, slideIndex) => {
-    const video = slide.querySelector(".screen-video");
-    if (slideIndex === index) return;
-    if (Math.abs(slideIndex - index) === 1) {
-      loadVideo(video, "auto");
-    } else {
-      loadVideo(video, "metadata");
-    }
-  });
-}
-
 function pauseNonCurrentVideos() {
   slides.forEach((slide, slideIndex) => {
     if (slideIndex === index) return;
     const video = slide.querySelector(".screen-video");
-    pauseVideo(video, previousIndex === slideIndex);
+    unloadVideo(video);
   });
 }
 
@@ -309,7 +289,6 @@ function playCurrentVideo() {
 
   const currentVideo = slides[index]?.querySelector(".screen-video");
   if (carouselStarted && carouselVisible && currentVideo) {
-    preloadNeighborVideos();
     if (playbackIndex !== index) {
       resetVideo(currentVideo);
       setSlideProgress(0);
@@ -406,7 +385,6 @@ function scrollToSlide(nextIndex, behavior = "smooth") {
 dots.forEach((dot, dotIndex) => {
   dot.addEventListener("click", () => {
     activateCarousel();
-    prewarmCarouselVideos();
     scrollToSlide(dotIndex);
   });
 });
@@ -414,8 +392,6 @@ dots.forEach((dot, dotIndex) => {
 track.addEventListener(
   "scroll",
   () => {
-    activateCarousel();
-    prewarmCarouselVideos();
     if (!scrollRaf) {
       scrollRaf = window.requestAnimationFrame(() => {
         scrollRaf = 0;
@@ -448,7 +424,6 @@ if ("IntersectionObserver" in window) {
       carouselVisible = entry.intersectionRatio >= 0.42;
       if (carouselVisible) {
         carouselStarted = true;
-        prewarmCarouselVideos();
         playCurrentVideo();
       } else {
         playCurrentVideo();

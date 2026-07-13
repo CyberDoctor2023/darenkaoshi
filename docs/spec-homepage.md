@@ -53,9 +53,10 @@ Key design signals:
 - Carousel should auto-advance through the five use cases when the current demo video finishes, like Apple's iOS highlights gallery, so users can watch without manually clicking each item; do not use a fixed hard-coded timer.
 - Carousel videos and their progress should remain idle while the user is still viewing the hero above; start the use-case playback only after the carousel is meaningfully visible or the user explicitly interacts with it.
 - Carousel progress should reflect actually rendered playback on the current video. If a browser advances media time but stops painting new frames, the control must not continue showing a fake smooth play state.
-- Performance: HDR start-frame videos should decode only long enough to paint their first frame, then pause; they must not all loop continuously in the background.
-- Media loading should prewarm nearby carousel videos as compressed browser-cache data while keeping decoding/playback limited to the current slide.
-- Perceived loading: mirror Apple's media stack pattern: keep a first-frame image layer and a video layer in the same positioned stack, then fade/hide the image layer once video data is ready so the screen is not black before MP4 loading/decoding catches up.
+- Performance: use-case cards follow Apple's start-frame architecture with a static first-frame image and one main video. Do not create or autoplay separate use-case start-frame MP4 layers.
+- Media loading: all use-case videos start with no `src`, `preload="none"`, and no autoplay. Assign and load the source only for the current slide after the carousel is meaningfully visible or explicitly activated. Non-current videos must not be prewarmed into a decoded state.
+- Media lifecycle: when a use-case stops being current, restore its static poster, pause it, remove its active `src`, and reset the media element so the browser can release the HEVC/HDR decoder and frame buffers. Browser/CDN cache may satisfy a later replay.
+- Perceived loading: mirror Apple's media stack pattern: keep a first-frame image layer and a video layer in the same positioned stack, then fade/hide the image layer only after the current main video paints a decoded frame so the screen is not black before MP4 loading/decoding catches up.
 - Refresh loading: screen containers should also carry the matching first-frame image as a CSS background and preload poster assets so a refresh does not briefly expose a black phone screen before the poster image paints.
 - Page resume: after lock screen, tab backgrounding, or bfcache restore, keep the first-frame image visible until the browser has actually painted a decoded video frame again; do not hide the poster merely because `canplay` or `playing` fired.
 - Playback: when a use case becomes current through dots, native scroll snap, or drag, its demo video should start automatically without requiring the user to press play. No play/pause button is shown.
@@ -79,7 +80,7 @@ Key design signals:
 - Carousel controls follow the measured Apple gallery proportions: `56px` outer height, `8px` dots, `16px` gaps, and a `48px` active progress slot; the five-item control width is derived from those tokens rather than manually stretched.
 - Device demos show stable first-frame posters before playback instead of a black screen flash.
 - Refreshing the page should keep a matching first-frame image visible while videos reload.
-- Poster-to-video transitions should not show an SDR-to-HDR flash; use matching HDR HEVC start-frame video layers before revealing the main HDR videos, with JPG posters only as the earliest fallback.
+- Poster-to-video transitions should not expose a black frame. Static start-frame images remain visible until the selected HEVC HDR main video paints; minor display color-management differences between the image and HDR video are preferable to decoding six extra start-frame videos.
 - Device demos do not reveal a black video layer after iOS lock/unlock or page visibility restore; the poster remains visible until the resumed video paints.
 - Trackpad horizontal swipes inside the carousel use native snap behavior and do not require custom wheel locking.
 - Use-case copy does not cover the phone screen and is vertically balanced against the demo placement.
