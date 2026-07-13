@@ -17,6 +17,8 @@ let carouselStarted = false;
 let playbackIndex = -1;
 let progressFrameRequest = 0;
 let progressFrameVideo = null;
+let mediaMaintenanceRequest = 0;
+let mediaMaintenanceUsesIdleCallback = false;
 
 function getScreen(video) {
   return video?.closest(".screen");
@@ -250,6 +252,43 @@ function unloadVideo(video) {
   video.load();
 }
 
+function cancelMediaMaintenance() {
+  if (!mediaMaintenanceRequest) return;
+  if (mediaMaintenanceUsesIdleCallback) {
+    window.cancelIdleCallback(mediaMaintenanceRequest);
+  } else {
+    window.clearTimeout(mediaMaintenanceRequest);
+  }
+  mediaMaintenanceRequest = 0;
+}
+
+function scheduleMediaMaintenance() {
+  cancelMediaMaintenance();
+
+  const maintain = () => {
+    mediaMaintenanceRequest = 0;
+    const nextIndex = (index + 1) % slides.length;
+    const keepPrepared = carouselStarted && carouselVisible ? new Set([index, nextIndex]) : new Set();
+
+    slides.forEach((slide, slideIndex) => {
+      const video = slide.querySelector(".screen-video");
+      if (slideIndex === nextIndex && keepPrepared.has(slideIndex) && !video.hasAttribute("src")) {
+        loadVideo(video, "metadata");
+      } else if (!keepPrepared.has(slideIndex)) {
+        unloadVideo(video);
+      }
+    });
+  };
+
+  if ("requestIdleCallback" in window) {
+    mediaMaintenanceUsesIdleCallback = true;
+    mediaMaintenanceRequest = window.requestIdleCallback(maintain, { timeout: 1200 });
+  } else {
+    mediaMaintenanceUsesIdleCallback = false;
+    mediaMaintenanceRequest = window.setTimeout(maintain, 250);
+  }
+}
+
 function activateCarousel() {
   carouselStarted = true;
   if (carouselVisible) {
@@ -280,7 +319,7 @@ function pauseNonCurrentVideos() {
   slides.forEach((slide, slideIndex) => {
     if (slideIndex === index) return;
     const video = slide.querySelector(".screen-video");
-    unloadVideo(video);
+    pauseVideo(video, true);
   });
 }
 
@@ -304,6 +343,8 @@ function playCurrentVideo() {
   } else {
     pauseVideo(heroVideo, true);
   }
+
+  scheduleMediaMaintenance();
 }
 
 function restoreAfterPageResume() {
@@ -456,6 +497,7 @@ document.addEventListener("visibilitychange", () => {
 
 window.addEventListener("pagehide", () => {
   stopRenderedProgress();
+  cancelMediaMaintenance();
   videos.forEach((video) => {
     showPoster(video);
     pauseVideo(video);

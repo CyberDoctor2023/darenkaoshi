@@ -230,7 +230,7 @@ h1 {
 .carousel {
   position: relative;
   overflow: visible;
-  padding-bottom: 34px;
+  padding-bottom: 96px;
   overscroll-behavior-x: contain;
   touch-action: pan-x pan-y pinch-zoom;
 }
@@ -266,13 +266,7 @@ h1 {
   background:
     radial-gradient(circle at 74% 22%, rgba(255, 255, 255, 0.24), rgba(190, 198, 214, 0.12) 17%, transparent 34%),
     var(--card);
-  opacity: 0.44;
-  transition: opacity 300ms ease;
   contain: layout paint style;
-}
-
-.slide.is-current {
-  opacity: 1;
 }
 
 .slide p {
@@ -285,16 +279,6 @@ h1 {
   font-weight: 600;
   line-height: 32px;
   text-wrap: balance;
-  opacity: 0.18;
-  transition:
-    opacity 300ms ease,
-    transform 560ms cubic-bezier(0.2, 0, 0, 1);
-  transition-delay: 0ms;
-}
-
-.slide.is-current p {
-  opacity: 1;
-  transition-delay: 0ms;
 }
 
 .slide .iphone-frame {
@@ -308,10 +292,6 @@ h1 {
   left: 64px;
   top: 50%;
   width: 620px;
-  transform: translate3d(-26px, -50%, 0);
-}
-
-.slide-device-right.is-current p {
   transform: translate3d(0, -50%, 0);
 }
 
@@ -323,10 +303,6 @@ h1 {
   right: 70px;
   top: 50%;
   width: 500px;
-  transform: translate3d(26px, -50%, 0);
-}
-
-.slide-device-left.is-current p {
   transform: translate3d(0, -50%, 0);
 }
 
@@ -339,10 +315,6 @@ h1 {
   top: 42px;
   width: min(760px, calc(100% - 96px));
   text-align: center;
-  transform: translate3d(-50%, -18px, 0);
-}
-
-.slide-device-center.is-current p {
   transform: translate3d(-50%, 0, 0);
 }
 
@@ -355,7 +327,7 @@ h1 {
 .carousel-controls {
   position: absolute;
   left: 50%;
-  bottom: 24px;
+  bottom: 18px;
   z-index: 4;
   display: flex;
   align-items: center;
@@ -509,7 +481,6 @@ h1 {
     top: 34px;
     bottom: auto;
     width: min(310px, calc(100% - 48px));
-    transform: translate3d(0, -10px, 0);
     text-align: left;
     font-size: 21px;
     line-height: 26px;
@@ -537,13 +508,7 @@ h1 {
     top: 34px;
     text-align: left;
     width: min(310px, calc(100% - 48px));
-    transform: translate3d(0, -10px, 0);
-  }
-
-  .slide-device-left.is-current p,
-  .slide-device-right.is-current p,
-  .slide-device-center.is-current p {
-    transform: translate3d(0, 0, 0);
+    transform: none;
   }
 
   .carousel-controls {

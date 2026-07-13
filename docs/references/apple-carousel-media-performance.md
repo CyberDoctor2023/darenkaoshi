@@ -39,10 +39,15 @@ Local page inspected in EGO at `http://localhost:5173/`:
 
 1. Remove the six start-frame MP4 layers from the default loading path. Keep static start-frame images visible until the selected main video paints a decoded frame.
 2. Give every non-hero carousel video `preload="none"`, no `autoplay`, and no `src` until the carousel is near the viewport.
-3. Activate only the current video. Optionally fetch the next video's compressed bytes after current playback is stable, without playing or decoding it.
-4. When a slide becomes distant, pause it and clear its `src`/call `load()` only if decoder memory remains high; avoid doing this to the immediate next slide because it increases replay latency.
+3. Activate the current video, then prepare only the next video after current playback is stable and the browser is idle. Clean A/B testing showed that strict single-decoder cold starts moved HDR setup into the transition path and worsened rAF frame intervals.
+4. Pause a slide immediately when it stops being current, but clear distant `src` values and call `load()` only in an idle callback. Keep current plus next prepared to balance transition latency and decoder memory.
 5. Remove inactive-copy blur and retain opacity/translation for focus motion.
 6. Keep `requestVideoFrameCallback` for progress synchronization because it tracks rendered frames rather than a timer.
+
+## Motion And Control Evidence
+
+- Apple caption sampling during a gallery transition kept both outgoing and incoming captions at `opacity: 1`; their screen position changed with the native gallery scroll instead of a delayed secondary text reveal.
+- Apple's `56px` control measured `112px` above the bottom of its `680px` authored card, inside a content-safe lower region. LifeNotes phones extend through that region, so its control should use a dedicated lane below the card rather than covering the device.
 
 ## Constraints
 
