@@ -67,6 +67,7 @@ Key design signals:
 - Playback: when a use case becomes current through dots, native scroll snap, or drag, its demo video should start automatically without requiring the user to press play. No play/pause button is shown.
 - Gesture containment: horizontal carousel gestures should use browser-native scrolling and `overscroll-behavior` instead of custom wheel delta state machines.
 - Native-first audit: keep native scroll snap for movement, CSS transitions for visual motion, and only retain JavaScript where state synchronization is required for video playback, active controls, autoplay, and accessibility attributes.
+- Responsive motion safety: scroll-linked copy parallax must be clamped against each fixed phone frame's horizontal safe zone, so resizing and horizontal dragging cannot make copy overlap the device.
 
 ## Completion Conditions
 

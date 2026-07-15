@@ -424,7 +424,28 @@ function updateCopyParallax() {
 
   slides.forEach((slide, slideIndex) => {
     const progress = (slideSnapPositions[slideIndex] - track.scrollLeft) / slideStep;
-    slide.querySelector("p").style.translate = `${progress * copyParallaxDistance}px 0`;
+    const copy = slide.querySelector("p");
+    const device = slide.querySelector(".iphone-frame");
+    const desiredOffset = progress * copyParallaxDistance;
+
+    if (!copy || !device) return;
+
+    // Measure the authored positions first, then keep the moving copy outside the fixed phone zone.
+    copy.style.translate = "";
+    const copyRect = copy.getBoundingClientRect();
+    const deviceRect = device.getBoundingClientRect();
+    const safeGap = 16;
+    let minOffset = -Infinity;
+    let maxOffset = Infinity;
+
+    if (slide.classList.contains("slide-device-right")) {
+      maxOffset = deviceRect.left - safeGap - copyRect.right;
+    } else if (slide.classList.contains("slide-device-left")) {
+      minOffset = deviceRect.right + safeGap - copyRect.left;
+    }
+
+    const safeOffset = Math.min(maxOffset, Math.max(minOffset, desiredOffset));
+    copy.style.translate = `${safeOffset}px 0`;
   });
 }
 
