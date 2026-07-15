@@ -292,7 +292,7 @@ h1 {
 .slide-device-right p {
   left: 64px;
   top: 50%;
-  width: 680px;
+  width: min(680px, max(0px, calc(100% - 492px)));
   transform: translate3d(0, -50%, 0);
 }
 
@@ -303,7 +303,7 @@ h1 {
 .slide-device-left p {
   right: 70px;
   top: 50%;
-  width: 560px;
+  width: min(560px, max(0px, calc(100% - 498px)));
   transform: translate3d(0, -50%, 0);
 }
 
@@ -335,16 +335,6 @@ h1 {
   background:
     radial-gradient(circle at 44.8% 35.8%, rgba(255, 255, 255, 0.24), rgba(190, 198, 214, 0.12) 17%, transparent 34%),
     var(--card);
-}
-
-@media (min-width: 834px) and (max-width: 1100px) {
-  .slide-device-right p {
-    width: max(180px, calc(100% - 540px));
-  }
-
-  .slide-device-left p {
-    width: max(180px, calc(100% - 540px));
-  }
 }
 
 .carousel-controls {

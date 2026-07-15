@@ -24,6 +24,7 @@ let mediaMaintenanceUsesIdleCallback = false;
 let slideSnapPositions = [];
 let slideStep = 1;
 let pageScrollEndTimer = 0;
+let resizeFrame = 0;
 
 function getScreen(video) {
   return video?.closest(".screen");
@@ -430,21 +431,27 @@ function updateCopyParallax() {
 
     if (!copy || !device) return;
 
-    // Measure the authored positions first, then keep the moving copy outside the fixed phone zone.
+    // Measure authored positions first, then keep the moving copy inside the card and outside the fixed phone zone.
     copy.style.translate = "";
     const copyRect = copy.getBoundingClientRect();
     const deviceRect = device.getBoundingClientRect();
+    const slideRect = slide.getBoundingClientRect();
     const safeGap = 16;
-    let minOffset = -Infinity;
-    let maxOffset = Infinity;
+    const cardMinOffset = slideRect.left - copyRect.left;
+    const cardMaxOffset = slideRect.right - copyRect.right;
+    let minOffset = cardMinOffset;
+    let maxOffset = cardMaxOffset;
+    const overlapsPhoneVertically = copyRect.bottom > deviceRect.top && copyRect.top < deviceRect.bottom;
 
-    if (slide.classList.contains("slide-device-right")) {
-      maxOffset = deviceRect.left - safeGap - copyRect.right;
-    } else if (slide.classList.contains("slide-device-left")) {
-      minOffset = deviceRect.right + safeGap - copyRect.left;
+    if (overlapsPhoneVertically && slide.classList.contains("slide-device-right")) {
+      maxOffset = Math.min(maxOffset, deviceRect.left - safeGap - copyRect.right);
+    } else if (overlapsPhoneVertically && slide.classList.contains("slide-device-left")) {
+      minOffset = Math.max(minOffset, deviceRect.right + safeGap - copyRect.left);
     }
 
-    const safeOffset = Math.min(maxOffset, Math.max(minOffset, desiredOffset));
+    const safeOffset = minOffset <= maxOffset
+      ? Math.min(maxOffset, Math.max(minOffset, desiredOffset))
+      : Math.min(cardMaxOffset, Math.max(cardMinOffset, desiredOffset));
     copy.style.translate = `${safeOffset}px 0`;
   });
 }
@@ -470,6 +477,16 @@ function scrollToSlide(nextIndex, behavior = "smooth") {
     behavior,
   });
   setCurrent(boundedIndex);
+}
+
+function recenterCurrentSlide(behavior = "instant") {
+  const snapLeft = slideSnapPositions[index];
+  if (!Number.isFinite(snapLeft)) return;
+
+  track.scrollTo({
+    left: snapLeft,
+    behavior,
+  });
 }
 
 dots.forEach((dot, dotIndex) => {
@@ -537,9 +554,12 @@ window.addEventListener("scroll", schedulePageScrollActivation, { passive: true 
 window.addEventListener("scrollend", schedulePageScrollActivation, { passive: true });
 
 window.addEventListener("resize", () => {
-  window.requestAnimationFrame(() => {
+  if (resizeFrame) window.cancelAnimationFrame(resizeFrame);
+
+  resizeFrame = window.requestAnimationFrame(() => {
+    resizeFrame = 0;
     refreshSlideMetrics();
-    scrollToSlide(index, "auto");
+    recenterCurrentSlide("instant");
     updateCopyParallax();
   });
 });
