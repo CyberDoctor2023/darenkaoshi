@@ -8,6 +8,8 @@ Media replacement record (2026-07-14): replaced the six main demo recordings fro
 
 Media delivery record (2026-07-14): version media URLs when replacing immutable Cloudflare Pages assets. Keep the HTML entrypoint revalidating, source files on a short cache, and versioned posters/videos/frames on a one-year immutable cache.
 
+Navigation destination record (2026-07-15): the portfolio navigation exposes the real CyberDoctor YouTube channel at `https://www.youtube.com/@cyberdoctor2023` and the real CyberDoctor GitHub profile at `https://github.com/CyberDoctor2023`. Both destinations are external links and open in a new tab with an explicit relationship boundary.
+
 ## Non-Goals
 
 - Do not implement the PRD content from Keynote page 1.
@@ -38,7 +40,7 @@ Key design signals:
 - Colors: `#ffffff`, `#f5f5f7`, `#1d1d1f`, `#000000`, `#6e6e73`, accent `#0071e3`.
 - Typography: use the approved Helvetica/Arial system stack while borrowing only Apple's scale, weight, line-height, and spacing relationships.
 - Layout: dark Apple-inspired canvas, centered content max width around 1260px, horizontal feature carousel cards around 1260x680, current slide centered with adjacent slides partially visible, compact dot controls floating over the gallery like Apple's all-access-pass controls.
-- Site framework: the top global navigation represents the CyberDoctor portfolio shell. `CyberDoctor` is the owner/name and must sit at the far upper-left with a higher visual hierarchy than the project links. `LifeNotes`, `SenseFlow`, and `YouTube` are secondary destinations inside that shell. No second floating LifeNotes local nav is shown.
+- Site framework: the top global navigation represents the CyberDoctor portfolio shell. `CyberDoctor` is the owner/name and must sit at the far upper-left with a higher visual hierarchy than the project links. `LifeNotes`, `SenseFlow`, `YouTube`, and `GitHub` are secondary destinations inside that shell. YouTube and GitHub point to the recorded external destinations; no second floating LifeNotes local nav is shown.
 - Use-case copy should sit around the visual middle of each card, not pinned to the bottom, with per-slide line breaks and widths chosen to avoid awkward one-character lines.
 - Mobile demos may crop the device vertically to echo the desktop compositions, but must not crop the device horizontally; the phone screen's main information should remain readable.
 - Hero headline should be centered within its text area.
@@ -73,7 +75,7 @@ Key design signals:
 
 - Homepage opens as the first screen without a landing-page detour.
 - Cloudflare Pages serves the site on `cyberdoctor.me`; `www.cyberdoctor.me` is attached as a custom domain and redirects permanently to the apex domain when active.
-- Global nav brand is `CyberDoctor`, not `LifeNotes`; it sits at the far upper-left and reads as the primary identity while LifeNotes, SenseFlow, and YouTube read as secondary portfolio destinations.
+- Global nav brand is `CyberDoctor`, not `LifeNotes`; it sits at the far upper-left and reads as the primary identity while LifeNotes, SenseFlow, YouTube, and GitHub read as secondary portfolio destinations. YouTube resolves to `https://www.youtube.com/@cyberdoctor2023`, and GitHub resolves to `https://github.com/CyberDoctor2023`.
 - All visible marketing text comes from Keynote pages 2-7.
 - Feature demos use the provided MP4 files and are muted.
 - Feature demos should use the original high-quality muted recordings under `public/videos/`, not the low-bitrate `public/videos/optimized/` transcodes.
