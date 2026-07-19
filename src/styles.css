@@ -140,16 +140,20 @@ h1 {
 
 .hero-demo::before {
   position: absolute;
-  z-index: -1;
+  z-index: 0;
   left: 50%;
   top: 38%;
-  width: 900px;
+  width: clamp(900px, 105vw, 1500px);
   aspect-ratio: 1;
   transform: translate(-50%, -50%);
   border-radius: 50%;
   background: radial-gradient(circle, rgba(255, 255, 255, 0.24), rgba(190, 198, 214, 0.12) 17%, transparent 34%);
   content: "";
   pointer-events: none;
+}
+
+.hero-demo .screen {
+  z-index: 1;
 }
 
 .iphone-frame {
