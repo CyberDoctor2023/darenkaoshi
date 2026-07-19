@@ -141,9 +141,9 @@ h1 {
 .hero-demo::before {
   position: absolute;
   z-index: 0;
-  left: 50%;
-  top: 38%;
-  width: clamp(900px, 105vw, 1500px);
+  left: 28.13%;
+  top: 16.57%;
+  width: 1517px;
   aspect-ratio: 1;
   transform: translate(-50%, -50%);
   border-radius: 50%;
@@ -495,6 +495,10 @@ h1 {
 
   .hero-demo {
     width: 238px;
+  }
+
+  .hero-demo::before {
+    width: 848px;
   }
 
   .section-head {

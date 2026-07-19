@@ -25,7 +25,7 @@ Publish the supplied AI product portfolio and resume PDFs under `/p/` inside the
 - Portfolio HTML, PNG, and PDF responses use normal public caching and do not request `noindex`, `nofollow`, `noarchive`, or `nosnippet`; the site's existing `noai` and `noimageai` policy remains unchanged.
 - The PDF remains byte-identical to the supplied source file.
 - Resume sync source of truth is `/Users/jack/Downloads/简历作品集/聂宇杰的 AI PM 简历.pdf`; each sync must replace `p/resume/resume.pdf`, regenerate both `p/resume/pages/page-1-288dpi.png` and `page-2-288dpi.png` locally at 288dpi, visually inspect both pages, and publish content-addressed image URLs so immutable Cloudflare caches cannot retain one stale page.
-- Hero case0 glow is rendered by the hero phone container itself. Its horizontal center is the phone's `50%`, its vertical anchor is the phone's `38%`, and it reuses the use-case glow color/stops. It must not use a page-level percentage such as `circle at 71% 38%`.
+- Hero case0 glow is rendered by the hero phone container itself and reproduces the first right-side use-case glow in the phone's own coordinate system: `left: 28.13%`, `top: 16.57%`, a 1517px desktop gradient canvas, and an 848px mobile canvas. It reuses the use-case glow color/stops and moves with the phone instead of using page-level coordinates.
 - Hero case0 glow must sit above the hero's black background but below the phone screen and device frame; a computed gradient hidden behind the hero stacking context does not satisfy the visual requirement.
 - Desktop and mobile layouts keep the navigation usable and the PNG pages visible without overlap.
 
