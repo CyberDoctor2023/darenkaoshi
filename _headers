@@ -8,6 +8,38 @@
 /*.html
   Cache-Control: public, max-age=0, must-revalidate
 
+/p/
+  Cache-Control: public, max-age=0, must-revalidate
+  X-Robots-Tag: noai, noimageai
+
+/p/index.html
+  Cache-Control: public, max-age=0, must-revalidate
+  X-Robots-Tag: noai, noimageai
+
+/p/portfolio.pdf
+  Cache-Control: public, max-age=86400
+  X-Robots-Tag: noai, noimageai
+
+/p/pages/*
+  Cache-Control: public, max-age=31536000, immutable
+  X-Robots-Tag: noai, noimageai
+
+/p/resume/
+  Cache-Control: public, max-age=0, must-revalidate
+  X-Robots-Tag: noai, noimageai
+
+/p/resume/index.html
+  Cache-Control: public, max-age=0, must-revalidate
+  X-Robots-Tag: noai, noimageai
+
+/p/resume/resume.pdf
+  Cache-Control: public, max-age=86400
+  X-Robots-Tag: noai, noimageai
+
+/p/resume/pages/*
+  Cache-Control: public, max-age=31536000, immutable
+  X-Robots-Tag: noai, noimageai
+
 /*
   X-Robots-Tag: noai, noimageai
   Permissions-Policy: browsing-topics=()

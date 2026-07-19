@@ -1,0 +1,119 @@
+html,
+body.portfolio-page {
+  height: 100%;
+  overflow: hidden;
+}
+
+.portfolio-page {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: var(--nav-h) 42px minmax(0, 1fr);
+}
+
+.portfolio-page .global-nav {
+  position: relative;
+  z-index: 1;
+  min-width: 0;
+  width: 100%;
+  overflow: hidden;
+}
+
+.portfolio-section-nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 28px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  background: #111;
+  color: rgba(245, 245, 247, 0.58);
+  font-size: 13px;
+  line-height: 1;
+}
+
+.portfolio-section-nav a {
+  position: relative;
+  display: grid;
+  height: 100%;
+  place-items: center;
+}
+
+.portfolio-section-nav a:hover,
+.portfolio-section-nav a.is-active {
+  color: rgba(245, 245, 247, 0.94);
+}
+
+.portfolio-section-nav a.is-active::after {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 2px;
+  content: "";
+  background: var(--blue);
+}
+
+.portfolio-viewer {
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
+  background: #202124;
+  overscroll-behavior: contain;
+}
+
+.portfolio-document {
+  width: 100%;
+  max-width: 1260px;
+  min-width: 0;
+  min-height: 100%;
+  margin: 0 auto;
+  padding: 20px 18px 48px;
+}
+
+.portfolio-document > img,
+.portfolio-page-image {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  margin: 0 auto 20px;
+  background: #fff;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.28);
+}
+
+.portfolio-document img {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  height: auto;
+}
+
+.portfolio-page-image {
+  overflow: hidden;
+}
+
+.resume-document {
+  max-width: 960px;
+}
+
+@media (max-width: 833px) {
+  .portfolio-page .global-nav-inner {
+    width: 100%;
+    min-width: 0;
+    padding: 0 18px;
+  }
+
+  .portfolio-page .global-links {
+    min-width: 0;
+  }
+
+  .portfolio-document {
+    padding: 10px 0 28px;
+  }
+
+  .portfolio-document > img,
+  .portfolio-page-image {
+    margin-bottom: 10px;
+    box-shadow: none;
+  }
+}
