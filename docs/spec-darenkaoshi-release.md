@@ -16,6 +16,7 @@
 - 发布包位于仓库内独立目录，入口资源及其依赖完整。
 - 原仓库工作树与原有分支保持可恢复，后续可通过原分支重新发布《人生备忘录》。
 - Cloudflare 使用该独立发布目录部署到 `cyberdoctor.me` 根域名。
+- GitHub 另建 `CyberDoctor2023/darenkaoshi` 远端仓库，保存当前发布版本；默认使用私有仓库，除非用户另行要求公开。
 
 ## Validation plan
 
@@ -23,3 +24,4 @@
 - 对入口 JavaScript、运行引擎做语法检查，对 JSON 数据做解析检查。
 - 检查发布包包含 `gamification-engine.js`，避免静态站点将缺失模块回退为 `index.html`。
 - 仅确认 Cloudflare 部署任务成功；交互测试由用户自行完成。
+- 使用 `gh repo view` 确认远端仓库，然后将当前 Git 版本推送为远端 `main` 分支。
