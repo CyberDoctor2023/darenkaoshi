@@ -1,0 +1,47 @@
+{
+  "version": "v1",
+  "events": {
+    "attempt_started": { "xp": 0 },
+    "scene_answered": { "xp": 10 },
+    "attempt_completed": { "xp": 30 }
+  },
+  "levels": [
+    { "level": 1, "minXp": 0, "title": "还没有开始" },
+    { "level": 2, "minXp": 20, "title": "看见一个场景" },
+    { "level": 3, "minXp": 60, "title": "开始回答" },
+    { "level": 4, "minXp": 120, "title": "见过自己的选择" },
+    { "level": 5, "minXp": 220, "title": "重新想象后来" }
+  ],
+  "achievements": [
+    {
+      "id": "first-answer",
+      "title": "第一次作答",
+      "description": "你没有绕开这个场景。",
+      "trigger": { "type": "event_count", "eventType": "scene_answered", "minimum": 1 }
+    },
+    {
+      "id": "complete-first-paper",
+      "title": "完成第一份答卷",
+      "description": "你看完了一组真实经历，也留下了自己的选择。",
+      "trigger": { "type": "event_count", "eventType": "attempt_completed", "minimum": 1 }
+    },
+    {
+      "id": "see-three-scenes",
+      "title": "看见三个场景",
+      "description": "不同的家庭故事，组成了你的第一层档案。",
+      "trigger": { "type": "unique_story_count", "minimum": 3 }
+    },
+    {
+      "id": "collect-three-types",
+      "title": "收齐三类卡",
+      "description": "成长、留下和错过，都被你放进了同一份答卷。",
+      "trigger": { "type": "card_type_count", "minimum": 3 }
+    },
+    {
+      "id": "return-to-paper",
+      "title": "再次打开答卷",
+      "description": "你愿意带着新的选择，再看一遍这些后来。",
+      "trigger": { "type": "completed_attempts", "minimum": 2 }
+    }
+  ]
+}
