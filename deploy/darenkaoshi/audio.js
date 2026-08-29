@@ -1,5 +1,4 @@
 const POSITION_KEY = 'darenkaoshi:exam-music-position:v1'
-const MUTE_KEY = 'darenkaoshi:exam-music-muted:v1'
 const toggle = document.querySelector('[data-route-sound]')
 const music = new Audio(new URL('./assets/audio/exam-piano-loop.ogg', import.meta.url).href)
 
@@ -10,12 +9,6 @@ music.volume = 0.16
 
 let lastSavedSecond = -1
 let muted = false
-
-try {
-  muted = window.localStorage.getItem(MUTE_KEY) === '1'
-} catch (error) {
-  muted = false
-}
 
 function restorePosition() {
   try {
@@ -56,17 +49,13 @@ function updateToggle() {
 
 toggle?.addEventListener('click', () => {
   muted = !muted
-  try {
-    window.localStorage.setItem(MUTE_KEY, muted ? '1' : '0')
-  } catch (error) {
-    // A blocked storage API should not block page audio.
-  }
   if (muted) stopMusic()
   else startMusic()
   updateToggle()
 })
 
 music.addEventListener('loadedmetadata', restorePosition, { once: true })
+music.addEventListener('canplay', startMusic)
 music.addEventListener('timeupdate', () => {
   const second = Math.floor(music.currentTime)
   if (second === lastSavedSecond) return
