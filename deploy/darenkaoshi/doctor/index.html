@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noai, noimageai" />
+    <meta name="tdm-reservation" content="1" />
+    <title>CyberDoctor｜答卷、出卷与 AIGC</title>
+    <link rel="stylesheet" href="./styles.css?v=doctor-route-v1" />
+  </head>
+  <body>
+    <header class="doctor-nav" aria-label="CyberDoctor">
+      <a class="doctor-brand" href="../" aria-label="大人考试首页">CyberDoctor</a>
+      <nav class="doctor-links" aria-label="站点导航">
+        <a href="../">答卷人</a>
+        <a href="#author">出卷人</a>
+        <a href="#angel">天使联系</a>
+        <a href="#videos">AIGC 视频</a>
+      </nav>
+    </header>
+
+    <main id="top">
+      <section class="doctor-hero" aria-labelledby="doctor-title">
+        <p class="scribble">欢迎各位参与</p>
+        <div class="hero-rule" aria-hidden="true"></div>
+        <p class="eyebrow">CYBERDOCTOR · OPEN CALL</p>
+        <h1 id="doctor-title"><span>《大人考试》</span><br />父母卷</h1>
+        <p class="hero-note">这不是一张标准答案，而是一张邀请函。<br />把你的经历交出来，也把下一道题写下来。</p>
+        <div class="hero-stamp" aria-hidden="true">一起<br />答题</div>
+        <div class="hero-rule hero-rule-bottom" aria-hidden="true"></div>
+      </section>
+
+      <section class="pathways" aria-labelledby="pathways-title">
+        <div class="section-heading"><span class="section-index">01</span><h2 id="pathways-title">选择你的角色</h2><span class="section-caption">pick a side, or both</span></div>
+        <div class="pathway-grid">
+          <a class="pathway-card pathway-card-answer" href="../">
+            <span class="card-number">A</span><span class="card-kicker">成为</span><h3>答卷人</h3>
+            <p>打开《大人考试》，记录此刻的答案，也找回过去写过的那一页。</p><span class="card-action">去答题 <span aria-hidden="true">↗</span></span>
+          </a>
+          <a class="pathway-card pathway-card-author" href="#author">
+            <span class="card-number">B</span><span class="card-kicker">成为</span><h3>出卷人</h3>
+            <p>你有一道想留给别人的题？先留下线索，出卷入口正在准备中。</p><span class="card-action">留下题目 <span aria-hidden="true">↓</span></span>
+          </a>
+          <a class="pathway-card pathway-card-angel" id="angel" href="https://github.com/CyberDoctor2023" target="_blank" rel="noopener noreferrer">
+            <span class="card-number">C</span><span class="card-kicker">成为</span><h3>天使朋友</h3>
+            <p>如果你愿意一起把这件事做得更远，欢迎从 GitHub 找到 CyberDoctor。</p><span class="card-action">联系我们 <span aria-hidden="true">↗</span></span>
+          </a>
+        </div>
+      </section>
+
+      <section class="author-note" id="author" aria-labelledby="author-title">
+        <div class="author-copy">
+          <span class="section-index">02</span><h2 id="author-title">把你的题，<br /><em>先写在这里。</em></h2>
+          <p>目前还没有公开收题表单。你可以先通过 GitHub 联系我们，告诉我们你想出的题、想分享的故事，或你愿意提供的帮助。</p>
+          <a class="ink-button" href="https://github.com/CyberDoctor2023" target="_blank" rel="noopener noreferrer">去 GitHub 留言 <span aria-hidden="true">↗</span></a>
+        </div>
+        <div class="question-paper" aria-label="出卷人留言纸"><p class="paper-label">QUESTION FOR THE NEXT PERSON</p><p class="paper-line">________________________________</p><p class="paper-line">________________________________</p><p class="paper-line">________________________________</p><span class="paper-sign">— your turn</span></div>
+      </section>
+
+      <section class="video-section" id="videos" aria-labelledby="video-title">
+        <div class="section-heading"><span class="section-index">03</span><h2 id="video-title">看我们做的 AIGC</h2><span class="section-caption">small moving answers</span></div>
+        <div class="video-grid">
+          <figure class="video-card video-card-wide"><video controls preload="metadata" playsinline poster="../media/posters/intro.jpg"><source src="../media/videos/intro.mp4" type="video/mp4" /></video><figcaption><span>01</span>介绍自己</figcaption></figure>
+          <figure class="video-card"><video controls preload="metadata" playsinline poster="../media/posters/use-case-1.jpg"><source src="../media/videos/use-case-1.mp4" type="video/mp4" /></video><figcaption><span>02</span>西岸攀岩</figcaption></figure>
+          <figure class="video-card"><video controls preload="metadata" playsinline poster="../media/posters/use-case-3.jpg"><source src="../media/videos/use-case-3.mp4" type="video/mp4" /></video><figcaption><span>03</span>学习什么来着</figcaption></figure>
+        </div>
+      </section>
+    </main>
+
+    <footer class="doctor-footer"><p>CyberDoctor · 把问题写下来，答案会慢慢长出来。</p><a href="#top" aria-label="回到顶部">↑</a></footer>
+  </body>
+</html>

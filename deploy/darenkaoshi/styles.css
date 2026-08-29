@@ -12,6 +12,8 @@ button { font:inherit; color:inherit; cursor:pointer; }
 .splash-answer { margin-top:42px; border:0; background:transparent; padding:0; font-family:'Noto Serif SC','Songti SC',Georgia,serif; font-size:clamp(29px, 3.7vw, 54px); font-weight:900; letter-spacing:-.12em; line-height:1; position:relative; z-index:0; transition:transform .2s ease; }
 .splash-answer::after { content:''; position:absolute; z-index:-1; left:-.15em; right:-.18em; bottom:-.03em; height:.27em; background:#111; transform:rotate(-2deg); }
 .splash-answer:hover { color:#fff; transform:translateY(-4px) rotate(-2deg); }
+.splash-doctor-link { margin-top:28px; color:var(--muted); font:12px Arial,sans-serif; letter-spacing:.04em; border-bottom:1px solid transparent; transition:.18s; }
+.splash-doctor-link:hover { color:var(--ink); border-color:var(--ink); transform:translateY(-2px); }
 .test-screen { width:100%; min-height:100vh; display:flex; flex-direction:column; align-items:center; background:#fff; padding:54px 24px 76px; }
 .test-logo { display:block; width:min(300px, 54vw); height:auto; mix-blend-mode:multiply; }
 .scene-nav { width:min(900px, 100%); margin:34px auto -8px; padding:10px 0 12px; border-top:1px dashed var(--line); border-bottom:1px dashed var(--line); display:flex; align-items:center; gap:18px; }

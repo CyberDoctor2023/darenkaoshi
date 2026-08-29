@@ -62,3 +62,21 @@
 
 /src/*
   Cache-Control: public, max-age=3600, must-revalidate
+
+/doctor/
+  Cache-Control: public, max-age=0, must-revalidate
+  X-Robots-Tag: noai, noimageai
+
+/doctor/index.html
+  Cache-Control: public, max-age=0, must-revalidate
+  X-Robots-Tag: noai, noimageai
+
+/doctor/styles.css
+  Cache-Control: public, max-age=3600, must-revalidate
+  X-Robots-Tag: noai, noimageai
+
+/media/videos/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/media/posters/*
+  Cache-Control: public, max-age=31536000, immutable

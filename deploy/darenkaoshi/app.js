@@ -465,6 +465,7 @@ function homeScreen() {
   return `<section class="splash-screen page-enter">
     <img class="splash-logo" src="assets/darenkaoshi-logo.png" alt="《大人考试》" />
     <button class="splash-answer" data-action="start-test">答卷</button>
+    <a class="splash-doctor-link" href="doctor/">更多入口：出卷人 · 天使联系 · AIGC <span aria-hidden="true">↗</span></a>
   </section>`
 }
 
