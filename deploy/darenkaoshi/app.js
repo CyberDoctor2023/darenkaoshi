@@ -115,7 +115,7 @@ const sceneMicroStrokes = {
 
 
 let gameDataError = ''
-const LOCAL_SAVE_VERSION = 1
+const LOCAL_SAVE_VERSION = 2
 const LOCAL_GUEST_KEY = 'darenkaoshi:guest-id:v1'
 const LOCAL_ATTEMPT_KEY = 'darenkaoshi:guest-attempt:v1'
 const LOCAL_GAMIFICATION_KEY = 'darenkaoshi:guest-gamification:v1'
@@ -149,7 +149,7 @@ function getOrCreateGuestId() {
 }
 
 const guestId = getOrCreateGuestId()
-const state = { screen: 'home', scenarioIndex: 0, answers: {}, selectedAnswer: null, transitioning: false, attemptId: createLocalId('attempt') }
+const state = { screen: 'home', scenarioIndex: 0, answers: {}, optionOrders: {}, selectedAnswer: null, transitioning: false, attemptId: createLocalId('attempt') }
 let resultDeckEntries = []
 let activeResultCardDeck = null
 let answerTransitionTimer = null
@@ -182,6 +182,42 @@ function storedAnswers() {
   }).filter(Boolean))
 }
 
+function shuffledOptionIndexes(optionCount) {
+  const order = Array.from({ length: optionCount }, (_, index) => index)
+  for (let index = order.length - 1; index > 0; index -= 1) {
+    const swapIndex = Math.floor(Math.random() * (index + 1))
+    const current = order[index]
+    order[index] = order[swapIndex]
+    order[swapIndex] = current
+  }
+  if (order.length > 1 && order[0] === 0) {
+    const first = order[0]
+    order[0] = order[1]
+    order[1] = first
+  }
+  return order
+}
+
+function isValidOptionOrder(story, order) {
+  if (!Array.isArray(order) || order.length !== story.options.length) return false
+  return new Set(order).size === story.options.length && order.every((index) => Number.isInteger(index) && index >= 0 && index < story.options.length)
+}
+
+function ensureOptionOrders(existingOrders = {}) {
+  state.optionOrders = Object.fromEntries(scenarios.map((story) => [
+    story.id,
+    isValidOptionOrder(story, existingOrders[story.id]) ? [...existingOrders[story.id]] : shuffledOptionIndexes(story.options.length)
+  ]))
+}
+
+function optionOrderFor(story) {
+  const existingOrder = state.optionOrders[story.id]
+  if (isValidOptionOrder(story, existingOrder)) return existingOrder
+  const nextOrder = shuffledOptionIndexes(story.options.length)
+  state.optionOrders[story.id] = nextOrder
+  return nextOrder
+}
+
 function saveGuestAttempt(overrides = {}) {
   const storage = getLocalStorage()
   if (!storage || !scenarios.length) return
@@ -197,6 +233,7 @@ function saveGuestAttempt(overrides = {}) {
     currentScenarioIndex: boundedIndex,
     currentStoryId: scenarios[boundedIndex]?.id || null,
     answers: storedAnswers(),
+    optionOrders: state.optionOrders,
     updatedAt: new Date().toISOString()
   }
   try {
@@ -211,7 +248,8 @@ function restoreGuestAttempt() {
   if (!storage) return
   try {
     const payload = JSON.parse(storage.getItem(LOCAL_ATTEMPT_KEY) || 'null')
-    if (!payload || payload.version !== LOCAL_SAVE_VERSION || payload.guestId !== guestId) return
+    if (!payload || ![1, LOCAL_SAVE_VERSION].includes(payload.version) || payload.guestId !== guestId) return
+    ensureOptionOrders(payload.optionOrders)
     const restoredAnswers = {}
     Object.entries(payload.answers || {}).forEach(([storyId, optionIndex]) => {
       const index = scenarios.findIndex((story) => story.id === storyId)
@@ -647,6 +685,7 @@ function scenariosScreen() {
 
 function questionScreen() {
   const item = scenarios[state.scenarioIndex]
+  const optionOrder = optionOrderFor(item)
   return `<section class="test-screen page-enter">
     <img class="test-logo" src="assets/darenkaoshi-logo.png" alt="《大人考试》" />
     ${sceneNavigator()}
@@ -665,7 +704,7 @@ function questionScreen() {
       <div class="scene-text" data-scene-index="${state.scenarioIndex}" aria-live="polite"></div>
       <p class="scene-credit">——${item.author}</p>
       <p class="test-question">${item.question}</p>
-      <div class="test-options">${item.options.map((option, index) => `<button class="test-option ${state.selectedAnswer === index ? 'selected' : ''}" data-action="answer" data-index="${index}"><span>${String.fromCharCode(65 + index)}</span>${option}</button>`).join('')}</div>
+      <div class="test-options">${optionOrder.map((originalIndex, displayIndex) => `<button class="test-option ${state.selectedAnswer === originalIndex ? 'selected' : ''}" data-action="answer" data-index="${originalIndex}"><span>${String.fromCharCode(65 + displayIndex)}</span>${item.options[originalIndex]}</button>`).join('')}</div>
     </div>
   </section>`
 }
@@ -1720,6 +1759,7 @@ function bindActions() {
       state.screen = 'question'
       state.scenarioIndex = 0
       state.answers = {}
+      ensureOptionOrders()
       state.selectedAnswer = null
       state.attemptId = createLocalId('attempt')
       saveGuestAttempt({ status: 'in_progress', currentScenarioIndex: 0 })
