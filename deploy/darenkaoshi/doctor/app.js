@@ -1,10 +1,12 @@
-const AUDIO_KEY = 'darenkaoshi:route-music-muted:v1'
+const AUDIO_KEY = 'darenkaoshi:route-music-muted:v2'
 const toggle = document.querySelector('[data-route-sound]')
-const music = new Audio('../assets/audio/happy-clappy-loop.wav')
+const music = new Audio('../assets/audio/exam-piano-loop.ogg')
 
 music.loop = true
+music.autoplay = true
 music.preload = 'auto'
 music.volume = 0.16
+music.load()
 
 let muted = false
 try {
@@ -54,5 +56,9 @@ const unlockMusic = () => {
 
 window.addEventListener('pointerdown', unlockMusic, { passive: true })
 window.addEventListener('keydown', unlockMusic, { passive: true })
+window.addEventListener('pageshow', startMusic)
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') startMusic()
+})
 updateToggle()
 startMusic()
