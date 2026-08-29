@@ -142,7 +142,10 @@ const audioState = {
   context: null,
   muted: false,
   activeSceneId: null,
-  userActivated: false
+  userActivated: false,
+  activeMusic: null,
+  activeMusicSrc: '',
+  fadeTimers: new Set()
 }
 
 try {
@@ -151,9 +154,27 @@ try {
   audioState.muted = false
 }
 
+function fadeMusic(audio, targetVolume, durationMs = 420, onComplete) {
+  if (!audio || typeof window === 'undefined') return
+  const startVolume = audio.volume
+  const startedAt = performance.now()
+  const timer = window.setInterval(() => {
+    const progress = Math.min(1, (performance.now() - startedAt) / durationMs)
+    const eased = 1 - Math.pow(1 - progress, 3)
+    audio.volume = startVolume + (targetVolume - startVolume) * eased
+    if (progress >= 1) {
+      window.clearInterval(timer)
+      audioState.fadeTimers.delete(timer)
+      onComplete?.()
+    }
+  }, 32)
+  audioState.fadeTimers.add(timer)
+}
+
 const audioManager = {
   activate() {
     audioState.userActivated = true
+    if (typeof state !== 'undefined' && state.screen === 'home' && !audioState.muted) this.startHomeMusic()
   },
   isMuted() {
     return audioState.muted
@@ -166,11 +187,54 @@ const audioManager = {
     } catch (error) {
       // Audio preference is optional; a blocked storage API should not block play.
     }
-    if (audioState.muted) audioState.context?.suspend?.()
+    if (audioState.muted) {
+      audioState.context?.suspend?.()
+      this.stopMusic()
+    } else if (typeof state !== 'undefined') {
+      if (state.screen === 'home') this.startHomeMusic()
+      if (state.screen === 'question') this.playScene(scenarios[state.scenarioIndex]?.id)
+    }
     return audioState.muted
   },
   resetScene() {
     audioState.activeSceneId = null
+  },
+  stopMusic() {
+    const current = audioState.activeMusic
+    audioState.activeMusic = null
+    audioState.activeMusicSrc = ''
+    if (!current) return
+    fadeMusic(current, 0, 260, () => {
+      current.pause()
+      current.currentTime = 0
+    })
+  },
+  switchMusic(config) {
+    if (!config?.src || audioState.muted || !audioState.userActivated) return
+    const targetVolume = Math.max(0.03, Math.min(0.24, Number(config.volume) || 0.1))
+    if (audioState.activeMusic && audioState.activeMusicSrc === config.src) {
+      fadeMusic(audioState.activeMusic, targetVolume, 240)
+      if (audioState.activeMusic.paused) audioState.activeMusic.play().catch(() => {})
+      return
+    }
+    const previous = audioState.activeMusic
+    if (previous) {
+      fadeMusic(previous, 0, 260, () => {
+        previous.pause()
+        previous.currentTime = 0
+      })
+    }
+    const next = new Audio(config.src)
+    next.loop = true
+    next.preload = 'auto'
+    next.volume = 0
+    audioState.activeMusic = next
+    audioState.activeMusicSrc = config.src
+    next.play().catch(() => {})
+    fadeMusic(next, targetVolume, 520)
+  },
+  startHomeMusic() {
+    this.switchMusic(audioRules?.homeMusic)
   },
   ensureContext() {
     if (!audioState.userActivated || audioState.muted || typeof window === 'undefined') return null
@@ -232,17 +296,14 @@ const audioManager = {
     oscillator.start(when)
     oscillator.stop(when + 0.25)
   },
-  playIntro() {
-    this.activate()
-    if (!audioRules?.intro) return
-    const intro = audioRules.intro
-    this.playPreset(intro.preset, intro)
-    if (intro.accentPreset) this.playPreset(intro.accentPreset, { volume: intro.accentVolume, pitch: intro.accentPitch }, intro.accentDelayMs)
+  playOptionClick() {
+    const click = audioRules?.optionClick
+    if (click) this.playPreset(click.preset, click)
   },
   playScene(sceneId) {
     if (!audioState.userActivated) return
-    const sound = audioRules?.sceneSounds?.find((entry) => entry.sceneId === sceneId)
-    if (sound) this.playPreset(sound.preset, sound)
+    const music = audioRules?.sceneMusic?.find((entry) => entry.sceneId === sceneId)
+    if (music) this.switchMusic(music)
   }
 }
 
@@ -264,6 +325,13 @@ const guestId = getOrCreateGuestId()
 const state = { screen: 'home', scenarioIndex: 0, answers: {}, selectedAnswer: null, transitioning: false, attemptId: createLocalId('attempt') }
 let resultDeckEntries = []
 let activeResultCardDeck = null
+
+window.addEventListener('pointerdown', () => {
+  if (state.screen === 'home' && !audioState.muted) audioManager.activate()
+}, { passive: true })
+window.addEventListener('keydown', () => {
+  if (state.screen === 'home' && !audioState.muted) audioManager.activate()
+}, { passive: true })
 
 function storedAnswers() {
   return Object.fromEntries(Object.entries(state.answers).map(([index, optionIndex]) => {
@@ -406,20 +474,21 @@ function validateAudioData(rules, stories) {
   const errors = []
   const presets = new Set(['pickupCoin', 'laserShoot', 'explosion', 'powerUp', 'hitHurt', 'jump', 'blipSelect', 'synth', 'tone', 'click', 'random'])
   if (!rules || typeof rules !== 'object') return ['音效规则缺失']
-  if (!rules.intro?.preset || !presets.has(rules.intro.preset)) errors.push('开场音效预设无效')
-  if (!Array.isArray(rules.sceneSounds)) return ['场景音效规则缺失']
+  if (!rules.optionClick?.preset || !presets.has(rules.optionClick.preset)) errors.push('选项点击音效预设无效')
+  if (!Number.isFinite(rules.optionClick?.volume) || rules.optionClick.volume <= 0 || rules.optionClick.volume > 0.25) errors.push('选项点击音效音量无效')
+  if (!rules.homeMusic?.src) errors.push('首页等待音乐缺失')
+  if (!Array.isArray(rules.sceneMusic)) return ['场景背景音乐规则缺失']
   const storyIds = new Set(stories.map((story) => story.id))
   const audioIds = new Set()
-  rules.sceneSounds.forEach((sound) => {
-    if (!sound?.sceneId || audioIds.has(sound.sceneId)) errors.push(`场景音效 ID 重复或缺失：${sound?.sceneId || 'unknown'}`)
-    audioIds.add(sound.sceneId)
-    if (!storyIds.has(sound.sceneId)) errors.push(`场景音效引用了不存在的故事：${sound.sceneId}`)
-    if (!presets.has(sound.preset)) errors.push(`场景音效预设无效：${sound.sceneId}`)
-    if (!Number.isFinite(sound.volume) || sound.volume <= 0 || sound.volume > 0.25) errors.push(`场景音效音量超出范围：${sound.sceneId}`)
-    if (!Number.isFinite(sound.pitch) || sound.pitch < 0.55 || sound.pitch > 1.5) errors.push(`场景音效音高超出范围：${sound.sceneId}`)
+  rules.sceneMusic.forEach((music) => {
+    if (!music?.sceneId || audioIds.has(music.sceneId)) errors.push(`场景背景音乐 ID 重复或缺失：${music?.sceneId || 'unknown'}`)
+    audioIds.add(music.sceneId)
+    if (!storyIds.has(music.sceneId)) errors.push(`场景背景音乐引用了不存在的故事：${music.sceneId}`)
+    if (!music.src) errors.push(`场景背景音乐文件缺失：${music.sceneId}`)
+    if (!Number.isFinite(music.volume) || music.volume <= 0 || music.volume > 0.25) errors.push(`场景背景音乐音量超出范围：${music.sceneId}`)
   })
   stories.forEach((story) => {
-    if (!audioIds.has(story.id)) errors.push(`故事缺少场景音效：${story.id}`)
+    if (!audioIds.has(story.id)) errors.push(`故事缺少场景背景音乐：${story.id}`)
   })
   return errors
 }
@@ -609,8 +678,14 @@ function soundToggle() {
 }
 
 function syncSceneAudio() {
+  if (state.screen === 'home') {
+    audioManager.resetScene()
+    if (audioState.userActivated && !audioState.muted) audioManager.startHomeMusic()
+    return
+  }
   if (state.screen !== 'question' || !scenarios.length) {
     audioManager.resetScene()
+    audioManager.stopMusic()
     return
   }
   const sceneId = scenarios[state.scenarioIndex]?.id
@@ -1615,7 +1690,6 @@ function bindActions() {
     if (action === 'home') { state.screen = 'home'; state.scenarioIndex = 0; state.selectedAnswer = null }
     if (action === 'scenarios' || action === 'start-test') {
       audioManager.activate()
-      if (action === 'start-test') audioManager.playIntro()
       state.screen = 'question'
       state.scenarioIndex = 0
       state.answers = {}
@@ -1641,6 +1715,7 @@ function bindActions() {
       audioManager.activate()
       if (state.transitioning) return
       state.transitioning = true
+      audioManager.playOptionClick()
       state.selectedAnswer = Number(element.dataset.index)
       state.answers[state.scenarioIndex] = state.selectedAnswer
       const answeredStory = scenarios[state.scenarioIndex]

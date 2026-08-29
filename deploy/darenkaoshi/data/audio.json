@@ -1,30 +1,31 @@
 {
-  "version": 1,
+  "version": 2,
   "provider": {
     "name": "jsfxr",
     "version": "1.4.1",
     "license": "Unlicense",
     "source": "https://github.com/chr15m/jsfxr"
   },
-  "intro": {
-    "preset": "powerUp",
-    "volume": 0.15,
-    "pitch": 0.92,
-    "accentPreset": "blipSelect",
-    "accentVolume": 0.1,
-    "accentPitch": 1.32,
-    "accentDelayMs": 220
+  "optionClick": {
+    "preset": "blipSelect",
+    "volume": 0.08,
+    "pitch": 1
   },
-  "sceneSounds": [
-    { "sceneId": "class-monitor", "preset": "blipSelect", "volume": 0.11, "pitch": 1.02 },
-    { "sceneId": "subject-choice", "preset": "pickupCoin", "volume": 0.11, "pitch": 1.08 },
-    { "sceneId": "winter-coat", "preset": "blipSelect", "volume": 0.08, "pitch": 0.84 },
-    { "sceneId": "braces", "preset": "powerUp", "volume": 0.1, "pitch": 0.94 },
-    { "sceneId": "bus-home", "preset": "jump", "volume": 0.1, "pitch": 1.16 },
-    { "sceneId": "mother-leaves", "preset": "synth", "volume": 0.08, "pitch": 0.72 },
-    { "sceneId": "ice-cream-slap", "preset": "tone", "volume": 0.07, "pitch": 1.22 },
-    { "sceneId": "basketball-slap", "preset": "laserShoot", "volume": 0.07, "pitch": 0.98 },
-    { "sceneId": "house-loan-cold-war", "preset": "synth", "volume": 0.055, "pitch": 0.66 },
-    { "sceneId": "music-dream-ridicule", "preset": "tone", "volume": 0.08, "pitch": 1.34 }
+  "homeMusic": {
+    "src": "assets/audio/happy-clappy-loop.wav",
+    "volume": 0.16,
+    "label": "首页等待音乐"
+  },
+  "sceneMusic": [
+    { "sceneId": "class-monitor", "src": "assets/audio/sunset-walk.ogg", "volume": 0.11, "label": "轻快的同学时光" },
+    { "sceneId": "subject-choice", "src": "assets/audio/calm-track-loop.ogg", "volume": 0.1, "label": "慢慢做选择" },
+    { "sceneId": "winter-coat", "src": "assets/audio/sunset-walk.ogg", "volume": 0.09, "label": "日常的小插曲" },
+    { "sceneId": "braces", "src": "assets/audio/calm-track-loop.ogg", "volume": 0.1, "label": "家里的平凡一天" },
+    { "sceneId": "bus-home", "src": "assets/audio/sunset-walk.ogg", "volume": 0.11, "label": "回家路上的脚步" },
+    { "sceneId": "mother-leaves", "src": "assets/audio/contemplation.mp3", "volume": 0.09, "label": "安静的夜晚" },
+    { "sceneId": "ice-cream-slap", "src": "assets/audio/sunset-walk.ogg", "volume": 0.09, "label": "返程前的热闹" },
+    { "sceneId": "basketball-slap", "src": "assets/audio/sunset-walk.ogg", "volume": 0.1, "label": "操场上的风" },
+    { "sceneId": "house-loan-cold-war", "src": "assets/audio/contemplation.mp3", "volume": 0.08, "label": "现实里的沉默" },
+    { "sceneId": "music-dream-ridicule", "src": "assets/audio/heavenly-loop.ogg", "volume": 0.1, "label": "还没熄灭的梦想" }
   ]
 }
