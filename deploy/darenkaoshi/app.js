@@ -1202,10 +1202,11 @@ function resultScreen() {
   resultDeckEntries = buildResultDeckEntries(simulation)
   return `<section class="result-page page-enter">
       <img class="test-logo result-logo" src="assets/darenkaoshi-logo.png" alt="《大人考试》" />
-      <div class="result-heading">
+      <div class="result-heading result-heading-with-cards">
         <p class="result-kicker">最终结果 · 三类卡结算</p>
         <h2>这一次选择，<br />留下了怎样的后来？</h2>
         <p>每个故事会落成一张现实身份卡；如果有明确的支持分支，还会看到一张对应的幻想卡。</p>
+        ${renderResultCardDeck()}
       </div>
       <section class="result-scoreboard" aria-label="结果卡数量">
         <div class="result-score-item result-score-growth"><strong>${simulation.cardCounts.growth}</strong><span>获得的成长卡</span></div>
@@ -1213,7 +1214,6 @@ function resultScreen() {
         <div class="result-score-item result-score-fantasy"><strong>${simulation.cardCounts.fantasy}</strong><span>错过的幻想卡</span></div>
       </section>
       ${gamificationSummary}
-      ${renderResultCardDeck()}
       <p class="identity-disclaimer">身份卡内容来自问卷事实与数据表中的分支推演。幻想卡不是已经发生的事实，也不是对未来的确定预言。</p>
       <div class="result-actions"><button class="ink-button" data-action="scenarios">再做一次 <span>↗</span></button><button class="text-button" data-action="home">回到首页</button></div>
     </section>`
@@ -1231,26 +1231,25 @@ function buildResultDeckEntries(simulation) {
 function renderResultCardDeck() {
   const labels = { growth: '成长', regret: '留下', fantasy: '幻想' }
   if (!resultDeckEntries.length) {
-    return `<section class="result-card-deck result-card-deck-empty"><p class="result-kicker">CARD DECK</p><h3>这一次没有生成身份卡。</h3></section>`
+    return `<section class="result-card-deck result-card-deck-empty"><p class="result-kicker">CARD REVEAL</p><h3>这一次没有生成身份卡。</h3></section>`
   }
-  return `<section class="result-card-deck" aria-labelledby="result-card-deck-title">
+  return `<section class="result-card-deck result-card-reveal" aria-labelledby="result-card-deck-title">
     <div class="result-card-deck-heading">
-      <div><p class="result-kicker">CARD DECK · ${resultDeckEntries.length} CARDS</p><h3 id="result-card-deck-title">后来，被收进了这一叠卡里。</h3></div>
-      <span>点击一张查看</span>
+      <div><p class="result-kicker">CARD REVEAL · ${resultDeckEntries.length} CARDS</p><h3 id="result-card-deck-title">后来，<em>从纸面上浮出来。</em></h3></div>
+      <span>点一张，打开它</span>
     </div>
     <div class="card-deck-stage" data-card-deck>
-      <canvas class="card-deck-canvas" aria-label="身份卡牌堆"></canvas>
-      <div class="card-deck-hint" aria-hidden="true">选择一张卡</div>
+      <canvas class="card-deck-canvas" aria-label="可点击的 3D 身份卡牌堆"></canvas>
+      <div class="card-deck-floor" aria-hidden="true"></div>
+      <div class="card-deck-hint" aria-hidden="true">从底部弹出的后来 · 点击卡牌</div>
     </div>
-    <label class="card-deck-picker-label" for="card-deck-picker">查看某张身份卡</label>
-    <select id="card-deck-picker" class="card-deck-picker" data-card-picker aria-label="选择要查看的身份卡">
-      <option value="">请选择一张卡</option>
+    <div class="result-card-rail" role="list" aria-label="结果卡牌索引">
       ${resultDeckEntries.map((entry, index) => {
         const identity = entry.mode === 'fantasy' ? entry.result.fantasyCard : entry.result.card
-        return `<option value="${index}">${String(index + 1).padStart(2, '0')} · ${labels[entry.mode]} · ${identity.title}</option>`
+        return `<button class="result-card-tab result-card-tab-${entry.mode}" type="button" role="listitem" data-card-index="${index}" aria-label="打开第 ${index + 1} 张${labels[entry.mode]}：${identity.title}"><span>${String(index + 1).padStart(2, '0')}</span><b>${identity.title}</b></button>`
       }).join('')}
-    </select>
-    <div class="selected-card-detail" data-card-detail aria-live="polite"><p class="card-detail-placeholder">上面的牌堆里，每一张都是一次选择的后来。选一张，看看它最后成了什么。</p></div>
+    </div>
+    <div class="selected-card-detail" data-card-detail aria-live="polite" hidden></div>
   </section>`
 }
 
@@ -1353,21 +1352,33 @@ function showResultCard(index) {
   const entry = resultDeckEntries[index]
   if (!entry) return
   const detail = document.querySelector('[data-card-detail]')
-  const picker = document.querySelector('[data-card-picker]')
   if (!detail) return
-  detail.innerHTML = renderIdentityCard(entry.result, entry.mode)
-  if (picker) picker.value = String(index)
+  detail.hidden = false
+  detail.classList.add('is-open')
+  detail.innerHTML = `<div class="card-detail-scrim" data-card-close="true" aria-hidden="true"></div><div class="card-detail-dialog" role="dialog" aria-modal="true" aria-label="${entry.mode === 'fantasy' ? '幻想身份卡' : '现实身份卡'}详情"><button class="card-detail-close" type="button" data-card-close="true" aria-label="关闭卡牌详情">收起 ×</button>${renderIdentityCard(entry.result, entry.mode)}</div>`
   prepareIdentityCardImages(detail)
   activeResultCardDeck?.focusCard(index)
+  detail.querySelectorAll('[data-card-close]').forEach((element) => element.addEventListener('click', closeResultCard))
+  detail.querySelector('.card-detail-close')?.focus()
+}
+
+function closeResultCard() {
+  const detail = document.querySelector('[data-card-detail]')
+  if (!detail) return
+  detail.classList.remove('is-open')
+  detail.hidden = true
+  detail.replaceChildren()
 }
 
 function prepareResultCardDeck() {
   const root = document.querySelector('[data-card-deck]')
   if (!root || root.dataset.ready === 'true' || !resultDeckEntries.length) return
   root.dataset.ready = 'true'
-  const picker = document.querySelector('[data-card-picker]')
-  picker?.addEventListener('change', () => showResultCard(Number(picker.value)))
+  document.querySelectorAll('[data-card-index]').forEach((button) => {
+    button.addEventListener('click', () => showResultCard(Number(button.dataset.cardIndex)))
+  })
   activeResultCardDeck = createResultCardDeck(root, resultDeckEntries)
+  window.requestAnimationFrame(() => root.classList.add('is-ready'))
 }
 
 function createResultCardDeck(root, entries) {
@@ -1390,6 +1401,7 @@ function createResultCardDeck(root, entries) {
   const raycaster = new THREE.Raycaster()
   const pointer = new THREE.Vector2()
   const meshes = []
+  const shadowMeshes = []
   const textures = []
   const materials = []
   let selectedIndex = -1
@@ -1401,14 +1413,21 @@ function createResultCardDeck(root, entries) {
     const textureCanvas = drawCardTexture(entry, index).canvas
     const texture = new THREE.CanvasTexture(textureCanvas)
     texture.colorSpace = THREE.SRGBColorSpace
-    const material = new THREE.MeshBasicMaterial({ map: texture, transparent: true })
-    const mesh = new THREE.Mesh(new THREE.PlaneGeometry(218, 306), material)
+    texture.anisotropy = renderer.capabilities.getMaxAnisotropy()
+    const frontMaterial = new THREE.MeshBasicMaterial({ map: texture })
+    const paperMaterial = new THREE.MeshBasicMaterial({ color: 0xf7f4eb })
+    const mesh = new THREE.Mesh(new THREE.BoxGeometry(218, 306, 12), [paperMaterial, paperMaterial, paperMaterial, paperMaterial, frontMaterial, paperMaterial])
     mesh.userData.cardIndex = index
-    mesh.position.z = index * 2
+    mesh.position.z = index * 1.4
     group.add(mesh)
+    const shadowMaterial = new THREE.MeshBasicMaterial({ color: 0x11110f, transparent: true, opacity: 0.16, depthWrite: false })
+    const shadow = new THREE.Mesh(new THREE.PlaneGeometry(228, 318), shadowMaterial)
+    shadow.position.z = index * 1.4 - 8
+    group.add(shadow)
     meshes.push(mesh)
+    shadowMeshes.push(shadow)
     textures.push(texture)
-    materials.push(material)
+    materials.push(frontMaterial, paperMaterial, shadowMaterial)
   })
 
   const resize = () => {
@@ -1425,8 +1444,30 @@ function createResultCardDeck(root, entries) {
       mesh.userData.target = {
         x: offset * spread,
         y: -Math.abs(offset) * 14 + (index === hoveredIndex ? 18 : 0),
-        z: index * 2 + (index === selectedIndex ? 45 : 0),
-        rotation: offset * -0.055 + (index === hoveredIndex ? 0.025 : 0)
+        z: index * 1.4 + (index === selectedIndex ? 34 : 0),
+        rotation: offset * -0.055 + (index === hoveredIndex ? 0.025 : 0),
+        rotationX: index === hoveredIndex ? -0.1 : Math.abs(offset) * 0.008,
+        rotationY: offset * 0.028,
+        scale: index === selectedIndex ? 1.06 : 1
+      }
+      const shadow = shadowMeshes[index]
+      shadow.userData.target = {
+        x: mesh.userData.target.x + 10,
+        y: mesh.userData.target.y - 13,
+        z: mesh.userData.target.z - 8,
+        rotation: mesh.userData.target.rotation,
+        rotationX: mesh.userData.target.rotationX,
+        rotationY: mesh.userData.target.rotationY,
+        scale: mesh.userData.target.scale
+      }
+      if (!mesh.userData.hasEntered) {
+        mesh.position.set(mesh.userData.target.x * 1.25, 420, mesh.userData.target.z - 28)
+        mesh.rotation.set(0.28, mesh.userData.target.rotationY * 1.5, mesh.userData.target.rotation)
+        mesh.scale.setScalar(0.68)
+        shadow.position.set(mesh.position.x + 14, mesh.position.y - 12, mesh.position.z - 8)
+        shadow.rotation.copy(mesh.rotation)
+        shadow.scale.setScalar(0.68)
+        mesh.userData.hasEntered = true
       }
     })
   }
@@ -1439,7 +1480,24 @@ function createResultCardDeck(root, entries) {
       mesh.position.x += (target.x - mesh.position.x) * 0.14
       mesh.position.y += (target.y - mesh.position.y) * 0.14
       mesh.position.z += (target.z - mesh.position.z) * 0.14
+      mesh.rotation.x += (target.rotationX - mesh.rotation.x) * 0.14
+      mesh.rotation.y += (target.rotationY - mesh.rotation.y) * 0.14
       mesh.rotation.z += (target.rotation - mesh.rotation.z) * 0.14
+      mesh.scale.x += (target.scale - mesh.scale.x) * 0.14
+      mesh.scale.y += (target.scale - mesh.scale.y) * 0.14
+      mesh.scale.z += (target.scale - mesh.scale.z) * 0.14
+      const shadow = shadowMeshes[mesh.userData.cardIndex]
+      const shadowTarget = shadow?.userData.target
+      if (shadow && shadowTarget) {
+        shadow.position.x += (shadowTarget.x - shadow.position.x) * 0.14
+        shadow.position.y += (shadowTarget.y - shadow.position.y) * 0.14
+        shadow.position.z += (shadowTarget.z - shadow.position.z) * 0.14
+        shadow.rotation.x += (shadowTarget.rotationX - shadow.rotation.x) * 0.14
+        shadow.rotation.y += (shadowTarget.rotationY - shadow.rotation.y) * 0.14
+        shadow.rotation.z += (shadowTarget.rotation - shadow.rotation.z) * 0.14
+        shadow.scale.x += (shadowTarget.scale - shadow.scale.x) * 0.14
+        shadow.scale.y += (shadowTarget.scale - shadow.scale.y) * 0.14
+      }
     })
     renderer.render(scene, camera)
     frameId = window.requestAnimationFrame(animate)
@@ -1495,6 +1553,10 @@ function createResultCardDeck(root, entries) {
       meshes.forEach((mesh) => {
         mesh.geometry.dispose()
         group.remove(mesh)
+      })
+      shadowMeshes.forEach((shadow) => {
+        shadow.geometry.dispose()
+        group.remove(shadow)
       })
       materials.forEach((material) => material.dispose())
       textures.forEach((texture) => texture.dispose())
