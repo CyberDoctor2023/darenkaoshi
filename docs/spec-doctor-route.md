@@ -7,13 +7,13 @@
 ## Non-goals
 
 - 不改动已有答题流程、题库、结果卡或本地存档逻辑。
-- 不虚构收题 API、邮箱、报名表单或天使联系人；当前没有公开收题服务时必须明确说明。
+- 不虚构收题 API、邮箱、报名表单或天使联系人；出卷人入口使用用户提供的飞书表单链接，天使入口使用已记录的 GitHub 联系渠道。
 - 不把发布包重新覆盖到普通 LifeNotes 首页分支。
 
 ## Completion conditions
 
 - `deploy/darenkaoshi/doctor/index.html` 可由 `/doctor/` 直接访问，并在窄屏上可用。
-- 答卷人入口指向当前答题首页；出卷人与天使入口提供诚实说明和已记录的 GitHub 联系渠道。
+- 答卷人入口指向当前答题首页；出卷人入口指向用户提供的飞书表单，天使入口指向已记录的 GitHub 联系渠道。
 - 页面先只交付三行入口框架，AIGC 视频模块作为后续迭代，不混入本次极简落地页。
 - 《大人考试》首页有一个不打断答题的 Doctor 路由入口。
 - 所有改动形成独立 Git 提交，并将 `deploy/darenkaoshi` 发布到 Cloudflare Pages 项目 `cyberdoctor`。
