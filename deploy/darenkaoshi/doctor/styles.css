@@ -13,6 +13,7 @@ a { color:inherit; text-decoration:none; }
 .welcome { margin:0 0 clamp(36px,6vw,64px); text-align:center; font:clamp(26px,5vw,46px)/1.1 var(--hand); transform:rotate(-2deg); }
 .ink-rule { width:100%; height:7px; background:var(--ink); clip-path:polygon(0 34%,12% 48%,28% 31%,43% 44%,60% 30%,77% 47%,100% 33%,100% 72%,80% 61%,62% 73%,42% 59%,26% 72%,11% 58%,0 71%); }
 .title-block { padding:clamp(42px,8vw,78px) 0 clamp(38px,7vw,66px); text-align:center; }
+.title-logo { display:block; width:min(560px,92vw); height:auto; margin:0 auto; mix-blend-mode:multiply; }
 h1,h2,h3,p { margin:0; }
 h1,h2 { font-family:var(--serif); font-weight:900; letter-spacing:-.1em; line-height:.92; text-shadow:2px 2px 0 rgba(9,9,9,.11); }
 h1 { font-size:clamp(62px,13vw,126px); transform:rotate(-1.3deg); }
@@ -30,9 +31,6 @@ h2 { margin-top:clamp(18px,3vw,32px); font-size:clamp(54px,11vw,106px); transfor
 .route-button:nth-child(3):hover,.route-button:nth-child(3):focus-visible { box-shadow:10px 11px 0 #e56d4e; }
 .route-button span { font:900 clamp(25px,5.5vw,48px)/1.1 var(--serif); letter-spacing:-.09em; }
 .route-button small { flex:0 0 auto; font:clamp(14px,2.5vw,19px) var(--hand); }
-.route-note { margin:clamp(38px,7vw,70px) 0 0; padding:22px 22px 25px; border-top:2px dashed var(--ink); border-bottom:2px dashed var(--ink); text-align:center; }
-.route-note p { color:var(--muted); font-size:14px; line-height:1.8; }
-.route-note a { display:inline-block; margin-top:12px; font-weight:800; border-bottom:2px solid var(--ink); }
 .poster-footer { display:flex; justify-content:space-between; gap:16px; margin-top:30px; color:var(--muted); font:11px Arial,sans-serif; letter-spacing:.14em; }
 .poster-footer a { color:var(--ink); font-size:20px; line-height:1; }
 .sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
