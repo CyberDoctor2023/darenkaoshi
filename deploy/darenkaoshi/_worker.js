@@ -8,12 +8,12 @@ export default {
     const isExamPath = url.pathname === '/darenkaoshi' || url.pathname === '/darenkaoshi/'
 
     if (isRouteHost && isEntryPath && (request.method === 'GET' || request.method === 'HEAD')) {
-      const routeUrl = new URL('/doctor/index.html', url)
+      const routeUrl = new URL('/doctor/', url)
       return env.ASSETS.fetch(new Request(routeUrl, request))
     }
 
     if (isRouteHost && isExamPath && (request.method === 'GET' || request.method === 'HEAD')) {
-      const examUrl = new URL('/index.html', url)
+      const examUrl = new URL('/', url)
       return env.ASSETS.fetch(new Request(examUrl, request))
     }
 
