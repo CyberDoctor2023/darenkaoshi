@@ -9,6 +9,7 @@ let scenarios = []
 let branchRules = []
 let identityCards = []
 let gamificationRules = null
+let parentResultDatabase = null
 let gamificationProfile = null
 let gameDataReady = false
 
@@ -16,7 +17,8 @@ const gameDataFiles = {
   stories: 'data/stories.json',
   branches: 'data/choice-branches.json',
   cards: 'data/identity-cards.json',
-  gamification: 'data/gamification.json'
+  gamification: 'data/gamification.json',
+  parentResults: 'data/parent-result-database.json'
 }
 
 // The source SVGs preserve the original drawing detail, but their generated
@@ -287,7 +289,68 @@ function validateGamificationData(rules) {
   return errors
 }
 
-function validateGameData(stories, branches, cards, gamification) {
+function validateParentResultData(database, stories, branches, cards) {
+  const errors = []
+  if (!database || typeof database !== 'object') return ['父母结果数据库缺失']
+  const parentTypes = Array.isArray(database.parentTypes) ? database.parentTypes : []
+  const dimensions = Array.isArray(database.dimensions) ? database.dimensions : []
+  const mappings = Array.isArray(database.branchMappings) ? database.branchMappings : []
+  if (parentTypes.length !== 16) errors.push(`父母类型数量应为 16，实际为 ${parentTypes.length}`)
+  if (dimensions.length !== 4) errors.push(`父母结果维度数量应为 4，实际为 ${dimensions.length}`)
+  if (!mappings.length) errors.push('父母结果分支映射缺失')
+
+  const parentTypeIds = new Set()
+  parentTypes.forEach((type) => {
+    if (!type?.id || parentTypeIds.has(type.id)) errors.push(`父母类型 ID 重复或缺失：${type?.id || 'unknown'}`)
+    parentTypeIds.add(type.id)
+    if (!type.title || !type.image || !type.risk) errors.push(`父母类型文案不完整：${type?.id || 'unknown'}`)
+  })
+
+  const dimensionIds = new Set()
+  dimensions.forEach((dimension) => {
+    if (!dimension?.id || dimensionIds.has(dimension.id)) errors.push(`结果维度 ID 重复或缺失：${dimension?.id || 'unknown'}`)
+    dimensionIds.add(dimension.id)
+    if (!dimension.label || !dimension.positive || !dimension.negative) errors.push(`结果维度文案不完整：${dimension?.id || 'unknown'}`)
+  })
+
+  const branchMap = new Map(branches.map((branch) => [branch.id, branch]))
+  const cardIds = new Set(cards.map((card) => card.id))
+  const mappingIds = new Set()
+  const mappedBranchIds = new Set()
+  const usedParentTypeIds = new Set()
+  mappings.forEach((mapping) => {
+    if (!mapping?.branchId || mappingIds.has(mapping.branchId)) errors.push(`父母结果分支 ID 重复或缺失：${mapping?.branchId || 'unknown'}`)
+    mappingIds.add(mapping.branchId)
+    mappedBranchIds.add(mapping.branchId)
+    const branch = branchMap.get(mapping.branchId)
+    if (!branch) {
+      errors.push(`父母结果分支引用了不存在的答题分支：${mapping.branchId}`)
+      return
+    }
+    if (mapping.storyId !== branch.storyId || mapping.optionIndex !== branch.optionIndex) errors.push(`父母结果分支未与答题分支对齐：${mapping.branchId}`)
+    if (mapping.resultType !== branch.resultType) errors.push(`父母结果类型未与答题分支对齐：${mapping.branchId}`)
+    if (mapping.identityCardId !== branch.outcomeCardId || !cardIds.has(mapping.identityCardId)) errors.push(`父母结果身份卡未与答题分支对齐：${mapping.branchId}`)
+    if ((mapping.fantasyBranchId || null) !== (branch.fantasyBranchId || null)) errors.push(`父母结果幻想分支未与答题分支对齐：${mapping.branchId}`)
+    if (!parentTypeIds.has(mapping.parentTypeId)) errors.push(`父母结果引用了不存在的父母类型：${mapping.branchId}`)
+    usedParentTypeIds.add(mapping.parentTypeId)
+    if (!Number.isFinite(mapping.typeWeight) || mapping.typeWeight < 0) errors.push(`父母类型权重无效：${mapping.branchId}`)
+    if (!Number.isFinite(mapping.shadowWeight) || mapping.shadowWeight < 0) errors.push(`影子类型权重无效：${mapping.branchId}`)
+    if (!mapping.signals || typeof mapping.signals !== 'object') errors.push(`父母结果信号缺失：${mapping.branchId}`)
+    else dimensions.forEach((dimension) => {
+      if (!Number.isFinite(mapping.signals[dimension.id])) errors.push(`父母结果信号无效：${mapping.branchId}/${dimension.id}`)
+    })
+    if (!mapping.analysis?.timeBill) errors.push(`父母结果时间账单缺失：${mapping.branchId}`)
+  })
+  branches.forEach((branch) => {
+    if (!mappedBranchIds.has(branch.id)) errors.push(`答题分支缺少父母结果映射：${branch.id}`)
+  })
+  parentTypeIds.forEach((id) => {
+    if (!usedParentTypeIds.has(id)) errors.push(`父母类型没有被任何答题分支使用：${id}`)
+  })
+  return errors
+}
+
+function validateGameData(stories, branches, cards, gamification, parentResults) {
   const errors = []
   const storyIds = new Set()
   const branchIds = new Set()
@@ -342,32 +405,36 @@ function validateGameData(stories, branches, cards, gamification) {
     })
   })
   errors.push(...validateGamificationData(gamification))
+  errors.push(...validateParentResultData(parentResults, stories, branches, cards))
   return errors
 }
 
 async function loadGameData() {
   try {
-    const [storiesResponse, branchesResponse, cardsResponse, gamificationResponse] = await Promise.all([
+    const [storiesResponse, branchesResponse, cardsResponse, gamificationResponse, parentResultsResponse] = await Promise.all([
       fetch(gameDataFiles.stories),
       fetch(gameDataFiles.branches),
       fetch(gameDataFiles.cards),
-      fetch(gameDataFiles.gamification)
+      fetch(gameDataFiles.gamification),
+      fetch(gameDataFiles.parentResults)
     ])
-    if (![storiesResponse, branchesResponse, cardsResponse, gamificationResponse].every((response) => response.ok)) {
+    if (![storiesResponse, branchesResponse, cardsResponse, gamificationResponse, parentResultsResponse].every((response) => response.ok)) {
       throw new Error('游戏数据表加载失败')
     }
-    const [stories, branches, cards, gamification] = await Promise.all([
+    const [stories, branches, cards, gamification, parentResults] = await Promise.all([
       storiesResponse.json(),
       branchesResponse.json(),
       cardsResponse.json(),
-      gamificationResponse.json()
+      gamificationResponse.json(),
+      parentResultsResponse.json()
     ])
-    const errors = validateGameData(stories, branches, cards, gamification)
+    const errors = validateGameData(stories, branches, cards, gamification, parentResults)
     if (errors.length) throw new Error(errors.join('；'))
     scenarios = stories
     branchRules = branches
     identityCards = cards
     gamificationRules = gamification
+    parentResultDatabase = parentResults
     restoreGuestAttempt()
     loadGamificationProfile()
     if (state.screen === 'result') recordCompletedAttempt()
@@ -388,21 +455,53 @@ function getIdentityCardForAnswer(storyId, optionIndex) {
   return identityCards.find((card) => card.id === branch?.outcomeCardId)
 }
 
+function resolveParentType(typeScores, parentSignalTotals) {
+  const dimensions = parentResultDatabase?.dimensions || []
+  const parentTypes = parentResultDatabase?.parentTypes || []
+  const parentOrder = new Map(parentTypes.map((parent, index) => [parent.id, index]))
+  const candidates = Object.keys(typeScores).filter((id) => typeScores[id] > 0)
+  if (!candidates.length) return null
+  candidates.sort((left, right) => {
+    const scoreDelta = typeScores[right] - typeScores[left]
+    if (scoreDelta) return scoreDelta
+    const leftSignals = parentSignalTotals[left] || {}
+    const rightSignals = parentSignalTotals[right] || {}
+    const leftSignalScore = dimensions.reduce((sum, dimension) => sum + (leftSignals[dimension.id] || 0), 0)
+    const rightSignalScore = dimensions.reduce((sum, dimension) => sum + (rightSignals[dimension.id] || 0), 0)
+    if (rightSignalScore !== leftSignalScore) return rightSignalScore - leftSignalScore
+    for (const dimension of dimensions) {
+      const signalDelta = (rightSignals[dimension.id] || 0) - (leftSignals[dimension.id] || 0)
+      if (signalDelta) return signalDelta
+    }
+    return (parentOrder.get(left) ?? Number.MAX_SAFE_INTEGER) - (parentOrder.get(right) ?? Number.MAX_SAFE_INTEGER)
+  })
+  return parentTypes.find((parent) => parent.id === candidates[0]) || null
+}
+
 function resolveSimulation() {
+  const mappingByBranchId = new Map((parentResultDatabase?.branchMappings || []).map((mapping) => [mapping.branchId, mapping]))
   const cardResults = scenarios.map((story, index) => {
     const selectedAnswer = state.answers[index]
     const branch = getBranchForAnswer(story.id, selectedAnswer)
+    const resultMapping = branch ? mappingByBranchId.get(branch.id) : null
     const card = identityCards.find((identityCard) => identityCard.id === branch?.outcomeCardId)
     const fantasyBranch = branch?.fantasyBranchId ? branchRules.find((candidate) => candidate.id === branch.fantasyBranchId) : null
     const fantasyCard = identityCards.find((identityCard) => identityCard.id === fantasyBranch?.outcomeCardId)
-    return { story, index, selectedAnswer, branch, card, fantasyBranch, fantasyCard }
+    return { story, index, selectedAnswer, branch, resultMapping, card, fantasyBranch, fantasyCard }
   }).filter((result) => result.branch && result.card)
   const selectedBranches = cardResults.map((result) => result.branch)
+  const selectedMappings = cardResults.map((result) => result.resultMapping).filter(Boolean)
   const dimensionState = { trust: 0, agency: 0 }
   const opportunityState = {}
   const timeImpactState = {}
+  const dimensionTotals = Object.fromEntries((parentResultDatabase?.dimensions || []).map((dimension) => [dimension.id, 0]))
+  const parentScores = {}
+  const shadowScores = {}
+  const parentSignalTotals = {}
+  const selectedBranchIds = []
 
   selectedBranches.forEach((branch) => {
+    selectedBranchIds.push(branch.id)
     Object.entries(branch.stateChange || {}).forEach(([dimension, value]) => {
       if (typeof value === 'number') dimensionState[dimension] = (dimensionState[dimension] || 0) + value
       else if (dimension === 'opportunity') opportunityState[value] = (opportunityState[value] || 0) + 1
@@ -410,12 +509,36 @@ function resolveSimulation() {
     })
   })
 
+  selectedMappings.forEach((mapping) => {
+    parentScores[mapping.parentTypeId] = (parentScores[mapping.parentTypeId] || 0) + mapping.typeWeight
+    const parentSignals = parentSignalTotals[mapping.parentTypeId] || (parentSignalTotals[mapping.parentTypeId] = {})
+    Object.entries(mapping.signals || {}).forEach(([dimension, value]) => {
+      dimensionTotals[dimension] = (dimensionTotals[dimension] || 0) + value
+      parentSignals[dimension] = (parentSignals[dimension] || 0) + value
+    })
+    if (mapping.resultType === 'regret' && mapping.shadowWeight > 0) {
+      shadowScores[mapping.parentTypeId] = (shadowScores[mapping.parentTypeId] || 0) + mapping.shadowWeight
+    }
+  })
+
+  const timeBills = [...new Set(selectedMappings.map((mapping) => mapping.analysis?.timeBill).filter(Boolean))]
+  const primaryParentType = resolveParentType(parentScores, parentSignalTotals)
+  const shadowParentType = resolveParentType(shadowScores, parentSignalTotals)
+
   return {
     selectedBranches,
+    selectedBranchIds,
+    selectedMappings,
     cardResults,
     dimensionState,
+    dimensionTotals,
     opportunityState,
     timeImpactState,
+    parentScores,
+    shadowScores,
+    primaryParentType,
+    shadowParentType,
+    timeBills,
     outcomeCards: cardResults.map((result) => result.card),
     cardCounts: {
       growth: cardResults.filter((result) => result.branch.resultType === 'growth').length,
@@ -1036,6 +1159,28 @@ function renderIdentityCard(result, mode) {
   </article>`
 }
 
+function renderParentResultSummary(simulation) {
+  const primary = simulation.primaryParentType
+  if (!primary) return ''
+  const shadow = simulation.shadowParentType
+  const dimensions = parentResultDatabase?.dimensions || []
+  const timeBills = simulation.timeBills.length
+    ? simulation.timeBills.map((bill) => `<li>${bill}</li>`).join('')
+    : '<li>没有明确的时间损失。</li>'
+  return `<section class="parent-result-summary" aria-label="父母类型结算">
+    <div class="parent-result-primary">
+      <p class="result-kicker">10 个选择汇总 · 主型父母</p>
+      <h3>你是：${primary.title}</h3>
+      <p>${primary.image}</p>
+    </div>
+    ${shadow ? `<div class="parent-result-shadow"><span>影子型 · 可能留下的代价</span><strong>${shadow.title}</strong><p>${shadow.risk}</p></div>` : ''}
+    <div class="parent-result-dimensions">
+      ${dimensions.map((dimension) => `<div><span>${dimension.label}</span><strong>${simulation.dimensionTotals[dimension.id] || 0}</strong><small>${(simulation.dimensionTotals[dimension.id] || 0) >= 0 ? dimension.positive : dimension.negative}</small></div>`).join('')}
+    </div>
+    <div class="parent-result-time"><span>时间账单</span><ul>${timeBills}</ul></div>
+  </section>`
+}
+
 function resultScreen() {
   const simulation = resolveSimulation()
   const gamificationSummary = renderGamificationSummary()
@@ -1046,6 +1191,7 @@ function resultScreen() {
         <p class="result-kicker">最终结果 · 三类卡结算</p>
         <h2>这一次选择，<br />留下了怎样的后来？</h2>
         <p>每个故事会落成一张现实身份卡；如果有明确的支持分支，还会看到一张对应的幻想卡。</p>
+        ${renderParentResultSummary(simulation)}
         ${renderResultCardDeck()}
       </div>
       <section class="result-scoreboard" aria-label="结果卡数量">
