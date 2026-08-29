@@ -1590,7 +1590,49 @@ function prepareIdentityCardImages() {
   })
 }
 
+function bindSceneNavigatorDragGuards() {
+  document.querySelectorAll('.scene-test-list').forEach((list) => {
+    let pointerStartX = null
+    let dragged = false
+    let suppressClick = false
+    let clearSuppressionTimer = null
+
+    const finishPointer = () => {
+      if (dragged) {
+        suppressClick = true
+        window.clearTimeout(clearSuppressionTimer)
+        clearSuppressionTimer = window.setTimeout(() => {
+          suppressClick = false
+        }, 450)
+      }
+      pointerStartX = null
+      dragged = false
+    }
+
+    list.addEventListener('pointerdown', (event) => {
+      if (event.pointerType === 'mouse' && event.button !== 0) return
+      pointerStartX = event.clientX
+      dragged = false
+    }, { passive: true })
+
+    list.addEventListener('pointermove', (event) => {
+      if (pointerStartX === null) return
+      if (Math.abs(event.clientX - pointerStartX) > 8) dragged = true
+    }, { passive: true })
+
+    list.addEventListener('pointerup', finishPointer, { passive: true })
+    list.addEventListener('pointercancel', finishPointer, { passive: true })
+    list.addEventListener('click', (event) => {
+      if (!suppressClick) return
+      suppressClick = false
+      event.preventDefault()
+      event.stopImmediatePropagation()
+    }, true)
+  })
+}
+
 function bindActions() {
+  bindSceneNavigatorDragGuards()
   document.querySelectorAll('[data-action]').forEach((element) => element.addEventListener('click', () => {
     const action = element.dataset.action
     if (action === 'home') { state.screen = 'home'; state.scenarioIndex = 0; state.selectedAnswer = null }

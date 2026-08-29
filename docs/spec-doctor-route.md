@@ -21,6 +21,7 @@
 - 《大人考试》首页有一个不打断答题的 Doctor 路由入口。
 - `https://cyberdoctor.me/` 显示手绘路由页，`https://cyberdoctor.me/darenkaoshi/` 显示考试首页；路径分流不改变浏览器地址。
 - 路由页的“答卷”按钮直接进入 `https://cyberdoctor.me/darenkaoshi/`。
+- 场景顶部横向拖动只负责滚动场景列表，不会因拖动结束时的合成 click 误触而跳到其他场景；直接点击按钮仍会打开对应场景。
 - 所有改动形成独立 Git 提交，并将 `deploy/darenkaoshi` 发布到 Cloudflare Pages 项目 `cyberdoctor`。
 
 ## Validation plan

@@ -18,7 +18,7 @@ button { font:inherit; color:inherit; cursor:pointer; }
 .test-logo { display:block; width:min(300px, 54vw); height:auto; mix-blend-mode:multiply; }
 .scene-nav { width:min(900px, 100%); margin:34px auto -8px; padding:10px 0 12px; border-top:1px dashed var(--line); border-bottom:1px dashed var(--line); display:flex; align-items:center; gap:18px; }
 .scene-nav-label { flex:0 0 auto; color:var(--muted); font:10px Arial,sans-serif; letter-spacing:.14em; text-transform:uppercase; }
-.scene-test-list { display:flex; flex:1; gap:6px; overflow-x:auto; scrollbar-width:thin; padding:3px 0 5px; }
+.scene-test-list { display:flex; flex:1; gap:6px; overflow-x:auto; overscroll-behavior-x:contain; touch-action:pan-x; scrollbar-width:thin; padding:3px 0 5px; }
 .scene-nav-button { flex:0 0 auto; display:inline-flex; align-items:center; gap:7px; border:1px solid transparent; background:transparent; padding:7px 8px; color:var(--muted); font-size:12px; line-height:1.2; white-space:nowrap; transition:.18s; }
 .scene-nav-button span { font:10px Arial,sans-serif; }
 .scene-nav-button b { font-weight:600; }
