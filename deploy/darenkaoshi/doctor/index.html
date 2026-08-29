@@ -6,27 +6,18 @@
     <meta name="robots" content="noai, noimageai" />
     <meta name="tdm-reservation" content="1" />
     <title>《大人考试｜父母卷》</title>
-    <link rel="stylesheet" href="./styles.css?v=doctor-route-v3" />
+    <link rel="stylesheet" href="../styles.css?v=app-v3" />
+    <link rel="stylesheet" href="./styles.css?v=doctor-route-v5" />
     <link rel="preload" href="../assets/audio/exam-piano-loop.ogg" as="audio" type="audio/ogg" />
   </head>
   <body>
-    <main class="poster" id="top">
-      <button class="route-sound-toggle" data-route-sound type="button" aria-pressed="false" aria-label="关闭首页等待音乐"><span aria-hidden="true">♪</span><b>等待音乐</b></button>
-      <p class="welcome">欢迎各位参加</p>
-      <div class="ink-rule" aria-hidden="true"></div>
-      <header class="title-block"><h1>《大人考试》</h1><h2>父母卷</h2></header>
-      <div class="ink-rule" aria-hidden="true"></div>
-      <section class="route-paper" aria-labelledby="route-title">
-        <h3 id="route-title" class="sr-only">请选择进入方式</h3>
-        <div class="route-corner" aria-hidden="true"></div>
-        <nav class="route-list" aria-label="进入方式">
-          <a class="route-button" href="../"><span>答卷</span><small>进入答题</small></a>
-          <a class="route-button" href="https://rcnsgyhgf9qf.feishu.cn/share/base/form/shrcnaeTgRGR65eAeXkBLSbDWcc" target="_blank" rel="noopener noreferrer"><span>成为出卷人</span><small>填写出卷表单</small></a>
-          <a class="route-button" href="https://github.com/CyberDoctor2023" target="_blank" rel="noopener noreferrer"><span>天使请点我</span><small>联系 CyberDoctor</small></a>
-        </nav>
-      </section>
-      <section class="route-note" id="author" aria-label="出卷人入口说明"><p>如果你有想出的题目，欢迎填写出卷人表单。</p><a href="https://rcnsgyhgf9qf.feishu.cn/share/base/form/shrcnaeTgRGR65eAeXkBLSbDWcc" target="_blank" rel="noopener noreferrer">填写出卷表单 ↗</a></section>
-      <footer class="poster-footer"><span>CYBERDOCTOR</span><a href="#top" aria-label="回到顶部">↑</a></footer>
+    <main class="splash-screen route-screen" id="top">
+      <img class="splash-logo" src="../assets/darenkaoshi-logo.png" alt="《大人考试》" />
+      <nav class="route-actions" aria-label="进入方式">
+        <a class="splash-answer route-action" href="../">答卷</a>
+        <a class="splash-answer route-action" href="https://rcnsgyhgf9qf.feishu.cn/share/base/form/shrcnaeTgRGR65eAeXkBLSbDWcc" target="_blank" rel="noopener noreferrer">成为出卷人</a>
+        <a class="splash-answer route-action" href="https://github.com/CyberDoctor2023" target="_blank" rel="noopener noreferrer">天使请点我</a>
+      </nav>
     </main>
     <script type="module" src="./app.js?v=doctor-route-v4"></script>
   </body>
