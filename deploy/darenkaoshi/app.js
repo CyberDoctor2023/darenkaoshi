@@ -119,6 +119,7 @@ const LOCAL_SAVE_VERSION = 1
 const LOCAL_GUEST_KEY = 'darenkaoshi:guest-id:v1'
 const LOCAL_ATTEMPT_KEY = 'darenkaoshi:guest-attempt:v1'
 const LOCAL_GAMIFICATION_KEY = 'darenkaoshi:guest-gamification:v1'
+const GAME_DATA_TIMEOUT_MS = 12000
 
 function createLocalId(prefix) {
   const uuid = globalThis.crypto?.randomUUID?.()
@@ -151,6 +152,28 @@ const guestId = getOrCreateGuestId()
 const state = { screen: 'home', scenarioIndex: 0, answers: {}, selectedAnswer: null, transitioning: false, attemptId: createLocalId('attempt') }
 let resultDeckEntries = []
 let activeResultCardDeck = null
+let answerTransitionTimer = null
+let answerTransitionToken = 0
+let sceneRenderGeneration = 0
+const sceneRequestControllers = new Set()
+const sceneCleanups = new Set()
+
+function cancelAnswerTransition() {
+  answerTransitionToken += 1
+  if (answerTransitionTimer !== null) {
+    window.clearTimeout(answerTransitionTimer)
+    answerTransitionTimer = null
+  }
+  state.transitioning = false
+}
+
+function cancelSceneWork() {
+  sceneRenderGeneration += 1
+  sceneRequestControllers.forEach((controller) => controller.abort())
+  sceneRequestControllers.clear()
+  sceneCleanups.forEach((cleanup) => cleanup())
+  sceneCleanups.clear()
+}
 
 function storedAnswers() {
   return Object.fromEntries(Object.entries(state.answers).map(([index, optionIndex]) => {
@@ -409,25 +432,26 @@ function validateGameData(stories, branches, cards, gamification, parentResults)
   return errors
 }
 
+async function fetchGameDataFile(path) {
+  const controller = new AbortController()
+  const timeoutId = window.setTimeout(() => controller.abort(), GAME_DATA_TIMEOUT_MS)
+  try {
+    const response = await fetch(path, { signal: controller.signal })
+    if (!response.ok) throw new Error('游戏数据表加载失败')
+    return await response.json()
+  } catch (error) {
+    if (error.name === 'AbortError') throw new Error('游戏数据载入超时，请刷新后重试')
+    throw error
+  } finally {
+    window.clearTimeout(timeoutId)
+  }
+}
+
 async function loadGameData() {
   try {
-    const [storiesResponse, branchesResponse, cardsResponse, gamificationResponse, parentResultsResponse] = await Promise.all([
-      fetch(gameDataFiles.stories),
-      fetch(gameDataFiles.branches),
-      fetch(gameDataFiles.cards),
-      fetch(gameDataFiles.gamification),
-      fetch(gameDataFiles.parentResults)
-    ])
-    if (![storiesResponse, branchesResponse, cardsResponse, gamificationResponse, parentResultsResponse].every((response) => response.ok)) {
-      throw new Error('游戏数据表加载失败')
-    }
-    const [stories, branches, cards, gamification, parentResults] = await Promise.all([
-      storiesResponse.json(),
-      branchesResponse.json(),
-      cardsResponse.json(),
-      gamificationResponse.json(),
-      parentResultsResponse.json()
-    ])
+    const [stories, branches, cards, gamification, parentResults] = await Promise.all(
+      Object.values(gameDataFiles).map(fetchGameDataFile)
+    )
     const errors = validateGameData(stories, branches, cards, gamification, parentResults)
     if (errors.length) throw new Error(errors.join('；'))
     scenarios = stories
@@ -562,6 +586,7 @@ function header(showBack = false) {
 
 function render() {
   const app = document.querySelector('#app')
+  cancelSceneWork()
   if (activeResultCardDeck && state.screen !== 'result') {
     activeResultCardDeck.destroy()
     activeResultCardDeck = null
@@ -646,6 +671,7 @@ function questionScreen() {
 }
 
 function prepareSceneDrawings() {
+  const renderGeneration = sceneRenderGeneration
   const sharedPencil = createPencilCursor()
   document.querySelectorAll('.scene-vector-stage').forEach((stage) => {
     const wrapper = stage.closest('.scene-scroll')
@@ -656,10 +682,21 @@ function prepareSceneDrawings() {
     const sceneId = stage.dataset.sceneId || item?.id
     const title = stage.dataset.title || item?.title || '后来身份'
     let activeDrawing = null
+    let stopDrawing = () => {}
+    const requestController = new AbortController()
+    sceneRequestControllers.add(requestController)
+    const cleanup = () => {
+      requestController.abort()
+      stopDrawing()
+      stopDrawing = () => {}
+      activeDrawing?.destroy()
+      activeDrawing = null
+    }
+    sceneCleanups.add(cleanup)
     const startStoryText = () => {
       if (!wrapper || !sceneText || sceneText.classList.contains('story-started')) return
       sceneText.classList.add('story-started')
-      typeSceneText(sceneText, item.scene)
+      typeSceneText(sceneText, item.scene, () => renderGeneration === sceneRenderGeneration && sceneText.isConnected)
     }
     const finishDrawing = () => {
       if (!wrapper || wrapper.classList.contains('is-drawn')) return
@@ -667,8 +704,7 @@ function prepareSceneDrawings() {
       startStoryText()
     }
     const showDrawingError = () => {
-      activeDrawing?.destroy()
-      activeDrawing = null
+      cleanup()
       stage.classList.add('is-drawing')
       stage.replaceChildren()
       const message = document.createElement('span')
@@ -686,9 +722,14 @@ function prepareSceneDrawings() {
     }
 
     stage.classList.add('is-drawing')
-    fetch(`assets/recreated/${sceneId}.svg`)
+    fetch(`assets/recreated/${sceneId}.svg`, { signal: requestController.signal })
       .then((response) => response.ok ? response.text() : Promise.reject(new Error(`Missing drawing asset: ${sceneId}`)))
       .then((svgString) => {
+        sceneRequestControllers.delete(requestController)
+        if (renderGeneration !== sceneRenderGeneration || !stage.isConnected) {
+          cleanup()
+          return
+        }
         activeDrawing = createThreeDrawing(svgString, title, sceneId)
         if (!activeDrawing) {
           showDrawingError()
@@ -702,9 +743,16 @@ function prepareSceneDrawings() {
           return
         }
         activeDrawing.overlay.append(sharedPencil)
-        playThreeDrawing(activeDrawing, sharedPencil, finishDrawing, startStoryText)
+        stopDrawing = playThreeDrawing(activeDrawing, sharedPencil, finishDrawing, startStoryText)
       })
-      .catch(showDrawingError)
+      .catch((error) => {
+        sceneRequestControllers.delete(requestController)
+        if (error.name === 'AbortError' || renderGeneration !== sceneRenderGeneration || !stage.isConnected) {
+          cleanup()
+          return
+        }
+        showDrawingError()
+      })
   })
 }
 
@@ -1014,6 +1062,7 @@ function playThreeDrawing(drawing, pencil, onComplete, onStart) {
   const screenLength = totalLength * drawing.getDisplayScale()
   const duration = Math.min(2900, Math.max(1900, screenLength / 0.82))
   let completed = false
+  let frameId = null
   let previousDrawable = null
   const finish = () => {
     if (completed) return
@@ -1026,7 +1075,7 @@ function playThreeDrawing(drawing, pencil, onComplete, onStart) {
 
   if (!totalLength) {
     finish()
-    return
+    return () => {}
   }
   onStart()
   const startedAt = performance.now()
@@ -1060,12 +1109,17 @@ function playThreeDrawing(drawing, pencil, onComplete, onStart) {
 
     drawing.renderer.render(drawing.scene, drawing.camera)
     if (progress < 1) {
-      window.requestAnimationFrame(frame)
+      frameId = window.requestAnimationFrame(frame)
       return
     }
     finish()
   }
-  window.requestAnimationFrame(frame)
+  frameId = window.requestAnimationFrame(frame)
+  return () => {
+    completed = true
+    if (frameId !== null) window.cancelAnimationFrame(frameId)
+    pencil.style.opacity = '0'
+  }
 }
 
 function createPencilCursor() {
@@ -1108,7 +1162,7 @@ function buildCenterlineSvg(svgString, title) {
   return svg
 }
 
-function typeSceneText(element, text) {
+function typeSceneText(element, text, isActive = () => element.isConnected) {
   if (!element) return
   element.textContent = ''
   const cursor = document.createElement('span')
@@ -1120,6 +1174,7 @@ function typeSceneText(element, text) {
   const delay = characters.length > 300 ? 8 : 12
 
   const typeNext = () => {
+    if (!isActive()) return
     if (index >= characters.length) {
       cursor.classList.add('is-done')
       element.classList.add('story-typed')
@@ -1394,6 +1449,7 @@ function createResultCardDeck(root, entries) {
   let hoveredIndex = -1
   let frameId = 0
   let disposed = false
+  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
   entries.forEach((entry, index) => {
     const textureCanvas = drawCardTexture(entry, index).canvas
@@ -1421,6 +1477,8 @@ function createResultCardDeck(root, entries) {
     renderer.setSize(Math.max(1, Math.round(rect.width)), Math.max(1, Math.round(rect.height)), false)
     renderer.render(scene, camera)
   }
+
+  const renderStaticFrame = () => renderer.render(scene, camera)
 
   const layout = () => {
     const center = (meshes.length - 1) / 2
@@ -1460,6 +1518,10 @@ function createResultCardDeck(root, entries) {
 
   const animate = () => {
     if (disposed) return
+    if (document.visibilityState !== 'visible') {
+      frameId = 0
+      return
+    }
     meshes.forEach((mesh) => {
       const target = mesh.userData.target
       if (!target) return
@@ -1485,8 +1547,12 @@ function createResultCardDeck(root, entries) {
         shadow.scale.y += (shadowTarget.scale - shadow.scale.y) * 0.14
       }
     })
-    renderer.render(scene, camera)
+    renderStaticFrame()
     frameId = window.requestAnimationFrame(animate)
+  }
+
+  const handleVisibilityChange = () => {
+    if (document.visibilityState === 'visible' && !reducedMotion && frameId === 0) animate()
   }
 
   const hitTest = (event) => {
@@ -1503,11 +1569,13 @@ function createResultCardDeck(root, entries) {
     hoveredIndex = nextIndex
     canvas.style.cursor = hoveredIndex >= 0 ? 'pointer' : 'default'
     layout()
+    if (reducedMotion) renderStaticFrame()
   }
   const handlePointerLeave = () => {
     hoveredIndex = -1
     canvas.style.cursor = 'default'
     layout()
+    if (reducedMotion) renderStaticFrame()
   }
   const handlePointerDown = (event) => {
     const nextIndex = hitTest(event)
@@ -1518,15 +1586,18 @@ function createResultCardDeck(root, entries) {
     if (!Number.isInteger(index) || index < 0 || index >= meshes.length) return
     selectedIndex = index
     layout()
+    if (reducedMotion) renderStaticFrame()
   }
 
   canvas.addEventListener('pointermove', handlePointerMove)
   canvas.addEventListener('pointerleave', handlePointerLeave)
   canvas.addEventListener('pointerdown', handlePointerDown)
   window.addEventListener('resize', resize)
+  document.addEventListener('visibilitychange', handleVisibilityChange)
   layout()
   resize()
-  animate()
+  if (reducedMotion) renderStaticFrame()
+  else animate()
   return {
     focusCard,
     destroy() {
@@ -1536,6 +1607,7 @@ function createResultCardDeck(root, entries) {
       canvas.removeEventListener('pointerleave', handlePointerLeave)
       canvas.removeEventListener('pointerdown', handlePointerDown)
       window.removeEventListener('resize', resize)
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
       meshes.forEach((mesh) => {
         mesh.geometry.dispose()
         group.remove(mesh)
@@ -1622,6 +1694,8 @@ function bindSceneNavigatorDragGuards() {
 
     list.addEventListener('pointerup', finishPointer, { passive: true })
     list.addEventListener('pointercancel', finishPointer, { passive: true })
+    list.addEventListener('pointerleave', finishPointer, { passive: true })
+    list.addEventListener('lostpointercapture', finishPointer, { passive: true })
     list.addEventListener('click', (event) => {
       if (!suppressClick) return
       suppressClick = false
@@ -1635,8 +1709,14 @@ function bindActions() {
   bindSceneNavigatorDragGuards()
   document.querySelectorAll('[data-action]').forEach((element) => element.addEventListener('click', () => {
     const action = element.dataset.action
-    if (action === 'home') { state.screen = 'home'; state.scenarioIndex = 0; state.selectedAnswer = null }
+    if (action === 'home') {
+      cancelAnswerTransition()
+      state.screen = 'home'
+      state.scenarioIndex = 0
+      state.selectedAnswer = null
+    }
     if (action === 'scenarios' || action === 'start-test') {
+      cancelAnswerTransition()
       state.screen = 'question'
       state.scenarioIndex = 0
       state.answers = {}
@@ -1651,7 +1731,7 @@ function bindActions() {
       })
     }
     if (action === 'open-scenario') {
-      state.transitioning = false
+      cancelAnswerTransition()
       state.screen = 'question'
       state.scenarioIndex = Number(element.dataset.index)
       state.selectedAnswer = state.answers[state.scenarioIndex] ?? null
@@ -1659,6 +1739,8 @@ function bindActions() {
     }
     if (action === 'answer') {
       if (state.transitioning) return
+      const answeredScenarioIndex = state.scenarioIndex
+      const transitionToken = ++answerTransitionToken
       state.transitioning = true
       state.selectedAnswer = Number(element.dataset.index)
       state.answers[state.scenarioIndex] = state.selectedAnswer
@@ -1677,9 +1759,11 @@ function bindActions() {
         currentScenarioIndex: nextIndex
       })
       element.classList.add('selected')
-      window.setTimeout(() => {
-        state.screen = state.scenarioIndex === scenarios.length - 1 ? 'result' : 'question'
-        state.scenarioIndex = Math.min(state.scenarioIndex + 1, scenarios.length - 1)
+      answerTransitionTimer = window.setTimeout(() => {
+        answerTransitionTimer = null
+        if (transitionToken !== answerTransitionToken || state.scenarioIndex !== answeredScenarioIndex) return
+        state.screen = answeredScenarioIndex === scenarios.length - 1 ? 'result' : 'question'
+        state.scenarioIndex = Math.min(answeredScenarioIndex + 1, scenarios.length - 1)
         state.selectedAnswer = state.answers[state.scenarioIndex] ?? null
         if (state.screen === 'result') recordCompletedAttempt()
         state.transitioning = false

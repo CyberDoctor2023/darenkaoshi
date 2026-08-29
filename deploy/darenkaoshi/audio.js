@@ -9,6 +9,7 @@ music.volume = 0.16
 
 let lastSavedSecond = -1
 let muted = false
+let playbackBlocked = false
 
 function restorePosition() {
   try {
@@ -30,9 +31,18 @@ function savePosition() {
   }
 }
 
-function startMusic() {
-  if (muted || !music.paused) return
-  music.play().catch(() => {})
+async function startMusic() {
+  if (muted || !music.paused) return true
+  try {
+    await music.play()
+    playbackBlocked = false
+    updateToggle()
+    return true
+  } catch (error) {
+    playbackBlocked = true
+    updateToggle()
+    return false
+  }
 }
 
 function stopMusic() {
@@ -43,11 +53,17 @@ function stopMusic() {
 function updateToggle() {
   if (!toggle) return
   toggle.setAttribute('aria-pressed', String(muted))
-  toggle.setAttribute('aria-label', muted ? '开启首页等待音乐' : '关闭首页等待音乐')
-  toggle.innerHTML = `<span aria-hidden="true">${muted ? '◌' : '♪'}</span><b>${muted ? '音乐已关' : '等待音乐'}</b>`
+  const label = muted ? '开启首页等待音乐' : playbackBlocked ? '点击开启首页等待音乐' : '关闭首页等待音乐'
+  const text = muted ? '音乐已关' : playbackBlocked ? '点击开启音乐' : '等待音乐'
+  toggle.setAttribute('aria-label', label)
+  toggle.innerHTML = `<span aria-hidden="true">${muted ? '◌' : playbackBlocked ? '▶' : '♪'}</span><b>${text}</b>`
 }
 
 toggle?.addEventListener('click', () => {
+  if (playbackBlocked && !muted) {
+    startMusic()
+    return
+  }
   muted = !muted
   if (muted) stopMusic()
   else startMusic()
@@ -56,6 +72,10 @@ toggle?.addEventListener('click', () => {
 
 music.addEventListener('loadedmetadata', restorePosition, { once: true })
 music.addEventListener('canplay', startMusic)
+music.addEventListener('error', () => {
+  playbackBlocked = true
+  updateToggle()
+})
 music.addEventListener('timeupdate', () => {
   const second = Math.floor(music.currentTime)
   if (second === lastSavedSecond) return
@@ -64,9 +84,11 @@ music.addEventListener('timeupdate', () => {
 })
 
 const unlockMusic = () => {
-  startMusic()
-  window.removeEventListener('pointerdown', unlockMusic)
-  window.removeEventListener('keydown', unlockMusic)
+  startMusic().then((started) => {
+    if (!started) return
+    window.removeEventListener('pointerdown', unlockMusic)
+    window.removeEventListener('keydown', unlockMusic)
+  })
 }
 
 window.addEventListener('pointerdown', unlockMusic, { passive: true })

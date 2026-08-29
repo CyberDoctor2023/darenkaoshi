@@ -75,6 +75,15 @@
   Cache-Control: public, max-age=3600, must-revalidate
   X-Robots-Tag: noai, noimageai
 
+/assets/recreated/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/assets/audio/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/data/*
+  Cache-Control: public, max-age=0, must-revalidate
+
 /media/videos/*
   Cache-Control: public, max-age=31536000, immutable
 
