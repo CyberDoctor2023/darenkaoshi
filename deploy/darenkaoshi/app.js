@@ -9,6 +9,7 @@ let scenarios = []
 let branchRules = []
 let identityCards = []
 let gamificationRules = null
+let audioRules = null
 let gamificationProfile = null
 let gameDataReady = false
 
@@ -16,7 +17,8 @@ const gameDataFiles = {
   stories: 'data/stories.json',
   branches: 'data/choice-branches.json',
   cards: 'data/identity-cards.json',
-  gamification: 'data/gamification.json'
+  gamification: 'data/gamification.json',
+  audio: 'data/audio.json'
 }
 
 // The source SVGs preserve the original drawing detail, but their generated
@@ -117,6 +119,7 @@ const LOCAL_SAVE_VERSION = 1
 const LOCAL_GUEST_KEY = 'darenkaoshi:guest-id:v1'
 const LOCAL_ATTEMPT_KEY = 'darenkaoshi:guest-attempt:v1'
 const LOCAL_GAMIFICATION_KEY = 'darenkaoshi:guest-gamification:v1'
+const LOCAL_AUDIO_KEY = 'darenkaoshi:audio-muted:v1'
 
 function createLocalId(prefix) {
   const uuid = globalThis.crypto?.randomUUID?.()
@@ -128,6 +131,118 @@ function getLocalStorage() {
     return typeof window === 'undefined' ? null : window.localStorage
   } catch (error) {
     return null
+  }
+}
+
+const soundLibraryPromise = import('jsfxr')
+  .then((module) => module.sfxr || module.default?.sfxr || null)
+  .catch(() => null)
+
+const audioState = {
+  context: null,
+  muted: false,
+  activeSceneId: null,
+  userActivated: false
+}
+
+try {
+  audioState.muted = getLocalStorage()?.getItem(LOCAL_AUDIO_KEY) === '1'
+} catch (error) {
+  audioState.muted = false
+}
+
+const audioManager = {
+  activate() {
+    audioState.userActivated = true
+  },
+  isMuted() {
+    return audioState.muted
+  },
+  toggle() {
+    this.activate()
+    audioState.muted = !audioState.muted
+    try {
+      getLocalStorage()?.setItem(LOCAL_AUDIO_KEY, audioState.muted ? '1' : '0')
+    } catch (error) {
+      // Audio preference is optional; a blocked storage API should not block play.
+    }
+    if (audioState.muted) audioState.context?.suspend?.()
+    return audioState.muted
+  },
+  resetScene() {
+    audioState.activeSceneId = null
+  },
+  ensureContext() {
+    if (!audioState.userActivated || audioState.muted || typeof window === 'undefined') return null
+    if (audioState.context) {
+      audioState.context.resume?.().catch(() => {})
+      return audioState.context
+    }
+    const AudioContextCtor = window.AudioContext || window.webkitAudioContext
+    if (!AudioContextCtor) return null
+    try {
+      audioState.context = new AudioContextCtor()
+      audioState.context.resume?.().catch(() => {})
+      return audioState.context
+    } catch (error) {
+      return null
+    }
+  },
+  async playPreset(preset, config = {}, delayMs = 0) {
+    if (audioState.muted) return
+    const context = this.ensureContext()
+    if (!context) return
+    const api = await soundLibraryPromise
+    if (audioState.muted) return
+    const when = context.currentTime + Math.max(0, delayMs) / 1000
+    if (api) {
+      try {
+        const sound = api.generate(preset, {
+          sound_vol: Math.max(0.02, Math.min(0.25, Number(config.volume) || 0.1)),
+          sample_rate: 22050,
+          sample_size: 8
+        })
+        const pitch = Math.max(0.55, Math.min(1.5, Number(config.pitch) || 1))
+        if (Number.isFinite(sound.p_base_freq)) sound.p_base_freq = Math.max(0.03, Math.min(1, sound.p_base_freq * pitch))
+        if (Number.isFinite(sound.p_freq_limit) && sound.p_freq_limit > 0) sound.p_freq_limit = Math.max(0.02, Math.min(1, sound.p_freq_limit * pitch))
+        const source = api.toWebAudio(sound, context)
+        if (!source) return
+        const gain = context.createGain()
+        gain.gain.setValueAtTime(0.72, when)
+        source.connect(gain)
+        gain.connect(context.destination)
+        source.start(when)
+        return
+      } catch (error) {
+        // Fall through to a tiny oscillator when the remote library is unavailable.
+      }
+    }
+    const oscillator = context.createOscillator()
+    const gain = context.createGain()
+    const pitch = Math.max(0.55, Math.min(1.5, Number(config.pitch) || 1))
+    const baseFrequency = 300 * pitch
+    oscillator.type = preset === 'hitHurt' ? 'triangle' : 'sine'
+    oscillator.frequency.setValueAtTime(baseFrequency, when)
+    oscillator.frequency.exponentialRampToValueAtTime(baseFrequency * 1.65, when + 0.18)
+    gain.gain.setValueAtTime(0.0001, when)
+    gain.gain.exponentialRampToValueAtTime(Math.max(0.018, Number(config.volume) || 0.06), when + 0.015)
+    gain.gain.exponentialRampToValueAtTime(0.0001, when + 0.24)
+    oscillator.connect(gain)
+    gain.connect(context.destination)
+    oscillator.start(when)
+    oscillator.stop(when + 0.25)
+  },
+  playIntro() {
+    this.activate()
+    if (!audioRules?.intro) return
+    const intro = audioRules.intro
+    this.playPreset(intro.preset, intro)
+    if (intro.accentPreset) this.playPreset(intro.accentPreset, { volume: intro.accentVolume, pitch: intro.accentPitch }, intro.accentDelayMs)
+  },
+  playScene(sceneId) {
+    if (!audioState.userActivated) return
+    const sound = audioRules?.sceneSounds?.find((entry) => entry.sceneId === sceneId)
+    if (sound) this.playPreset(sound.preset, sound)
   }
 }
 
@@ -287,7 +402,29 @@ function validateGamificationData(rules) {
   return errors
 }
 
-function validateGameData(stories, branches, cards, gamification) {
+function validateAudioData(rules, stories) {
+  const errors = []
+  const presets = new Set(['pickupCoin', 'laserShoot', 'explosion', 'powerUp', 'hitHurt', 'jump', 'blipSelect', 'synth', 'tone', 'click', 'random'])
+  if (!rules || typeof rules !== 'object') return ['音效规则缺失']
+  if (!rules.intro?.preset || !presets.has(rules.intro.preset)) errors.push('开场音效预设无效')
+  if (!Array.isArray(rules.sceneSounds)) return ['场景音效规则缺失']
+  const storyIds = new Set(stories.map((story) => story.id))
+  const audioIds = new Set()
+  rules.sceneSounds.forEach((sound) => {
+    if (!sound?.sceneId || audioIds.has(sound.sceneId)) errors.push(`场景音效 ID 重复或缺失：${sound?.sceneId || 'unknown'}`)
+    audioIds.add(sound.sceneId)
+    if (!storyIds.has(sound.sceneId)) errors.push(`场景音效引用了不存在的故事：${sound.sceneId}`)
+    if (!presets.has(sound.preset)) errors.push(`场景音效预设无效：${sound.sceneId}`)
+    if (!Number.isFinite(sound.volume) || sound.volume <= 0 || sound.volume > 0.25) errors.push(`场景音效音量超出范围：${sound.sceneId}`)
+    if (!Number.isFinite(sound.pitch) || sound.pitch < 0.55 || sound.pitch > 1.5) errors.push(`场景音效音高超出范围：${sound.sceneId}`)
+  })
+  stories.forEach((story) => {
+    if (!audioIds.has(story.id)) errors.push(`故事缺少场景音效：${story.id}`)
+  })
+  return errors
+}
+
+function validateGameData(stories, branches, cards, gamification, audio) {
   const errors = []
   const storyIds = new Set()
   const branchIds = new Set()
@@ -342,32 +479,36 @@ function validateGameData(stories, branches, cards, gamification) {
     })
   })
   errors.push(...validateGamificationData(gamification))
+  errors.push(...validateAudioData(audio, stories))
   return errors
 }
 
 async function loadGameData() {
   try {
-    const [storiesResponse, branchesResponse, cardsResponse, gamificationResponse] = await Promise.all([
+    const [storiesResponse, branchesResponse, cardsResponse, gamificationResponse, audioResponse] = await Promise.all([
       fetch(gameDataFiles.stories),
       fetch(gameDataFiles.branches),
       fetch(gameDataFiles.cards),
-      fetch(gameDataFiles.gamification)
+      fetch(gameDataFiles.gamification),
+      fetch(gameDataFiles.audio)
     ])
-    if (![storiesResponse, branchesResponse, cardsResponse, gamificationResponse].every((response) => response.ok)) {
+    if (![storiesResponse, branchesResponse, cardsResponse, gamificationResponse, audioResponse].every((response) => response.ok)) {
       throw new Error('游戏数据表加载失败')
     }
-    const [stories, branches, cards, gamification] = await Promise.all([
+    const [stories, branches, cards, gamification, audio] = await Promise.all([
       storiesResponse.json(),
       branchesResponse.json(),
       cardsResponse.json(),
-      gamificationResponse.json()
+      gamificationResponse.json(),
+      audioResponse.json()
     ])
-    const errors = validateGameData(stories, branches, cards, gamification)
+    const errors = validateGameData(stories, branches, cards, gamification, audio)
     if (errors.length) throw new Error(errors.join('；'))
     scenarios = stories
     branchRules = branches
     identityCards = cards
     gamificationRules = gamification
+    audioRules = audio
     restoreGuestAttempt()
     loadGamificationProfile()
     if (state.screen === 'result') recordCompletedAttempt()
@@ -459,10 +600,28 @@ function render() {
     prepareResultCardDeck()
     prepareIdentityCardImages()
   }
+  syncSceneAudio()
+}
+
+function soundToggle() {
+  const muted = audioManager.isMuted()
+  return `<button class="sound-toggle" data-action="toggle-sound" type="button" aria-pressed="${muted}" aria-label="${muted ? '开启音效' : '关闭音效'}"><span aria-hidden="true">${muted ? '◌' : '♪'}</span><b>${muted ? '音效已关' : '音效开启'}</b></button>`
+}
+
+function syncSceneAudio() {
+  if (state.screen !== 'question' || !scenarios.length) {
+    audioManager.resetScene()
+    return
+  }
+  const sceneId = scenarios[state.scenarioIndex]?.id
+  if (!sceneId || sceneId === audioState.activeSceneId) return
+  audioState.activeSceneId = sceneId
+  audioManager.playScene(sceneId)
 }
 
 function homeScreen() {
   return `<section class="splash-screen page-enter">
+    <div class="splash-audio-control">${soundToggle()}</div>
     <img class="splash-logo" src="assets/darenkaoshi-logo.png" alt="《大人考试》" />
     <button class="splash-answer" data-action="start-test">答卷</button>
     <a class="splash-doctor-link" href="doctor/">更多入口：出卷人 · 天使联系 · AIGC <span aria-hidden="true">↗</span></a>
@@ -500,6 +659,7 @@ function scenariosScreen() {
 function questionScreen() {
   const item = scenarios[state.scenarioIndex]
   return `<section class="test-screen page-enter">
+    <div class="test-audio-control">${soundToggle()}</div>
     <img class="test-logo" src="assets/darenkaoshi-logo.png" alt="《大人考试》" />
     ${sceneNavigator()}
     <div class="test-content">
@@ -1385,8 +1545,15 @@ function prepareIdentityCardImages() {
 function bindActions() {
   document.querySelectorAll('[data-action]').forEach((element) => element.addEventListener('click', () => {
     const action = element.dataset.action
+    if (action === 'toggle-sound') {
+      audioManager.toggle()
+      render()
+      return
+    }
     if (action === 'home') { state.screen = 'home'; state.scenarioIndex = 0; state.selectedAnswer = null }
     if (action === 'scenarios' || action === 'start-test') {
+      audioManager.activate()
+      if (action === 'start-test') audioManager.playIntro()
       state.screen = 'question'
       state.scenarioIndex = 0
       state.answers = {}
@@ -1401,6 +1568,7 @@ function bindActions() {
       })
     }
     if (action === 'open-scenario') {
+      audioManager.activate()
       state.transitioning = false
       state.screen = 'question'
       state.scenarioIndex = Number(element.dataset.index)
@@ -1408,6 +1576,7 @@ function bindActions() {
       saveGuestAttempt()
     }
     if (action === 'answer') {
+      audioManager.activate()
       if (state.transitioning) return
       state.transitioning = true
       state.selectedAnswer = Number(element.dataset.index)

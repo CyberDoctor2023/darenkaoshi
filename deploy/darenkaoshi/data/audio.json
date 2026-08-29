@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "provider": {
+    "name": "jsfxr",
+    "version": "1.4.1",
+    "license": "Unlicense",
+    "source": "https://github.com/chr15m/jsfxr"
+  },
+  "intro": {
+    "preset": "powerUp",
+    "volume": 0.15,
+    "pitch": 0.92,
+    "accentPreset": "blipSelect",
+    "accentVolume": 0.1,
+    "accentPitch": 1.32,
+    "accentDelayMs": 220
+  },
+  "sceneSounds": [
+    { "sceneId": "class-monitor", "preset": "blipSelect", "volume": 0.11, "pitch": 1.02 },
+    { "sceneId": "subject-choice", "preset": "pickupCoin", "volume": 0.11, "pitch": 1.08 },
+    { "sceneId": "winter-coat", "preset": "blipSelect", "volume": 0.08, "pitch": 0.84 },
+    { "sceneId": "braces", "preset": "powerUp", "volume": 0.1, "pitch": 0.94 },
+    { "sceneId": "bus-home", "preset": "jump", "volume": 0.1, "pitch": 1.16 },
+    { "sceneId": "mother-leaves", "preset": "synth", "volume": 0.08, "pitch": 0.72 },
+    { "sceneId": "ice-cream-slap", "preset": "tone", "volume": 0.07, "pitch": 1.22 },
+    { "sceneId": "basketball-slap", "preset": "laserShoot", "volume": 0.07, "pitch": 0.98 },
+    { "sceneId": "house-loan-cold-war", "preset": "synth", "volume": 0.055, "pitch": 0.66 },
+    { "sceneId": "music-dream-ridicule", "preset": "tone", "volume": 0.08, "pitch": 1.34 }
+  ]
+}
