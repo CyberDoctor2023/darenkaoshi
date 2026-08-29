@@ -9,7 +9,6 @@ let scenarios = []
 let branchRules = []
 let identityCards = []
 let gamificationRules = null
-let audioRules = null
 let gamificationProfile = null
 let gameDataReady = false
 
@@ -17,8 +16,7 @@ const gameDataFiles = {
   stories: 'data/stories.json',
   branches: 'data/choice-branches.json',
   cards: 'data/identity-cards.json',
-  gamification: 'data/gamification.json',
-  audio: 'data/audio.json'
+  gamification: 'data/gamification.json'
 }
 
 // The source SVGs preserve the original drawing detail, but their generated
@@ -119,7 +117,6 @@ const LOCAL_SAVE_VERSION = 1
 const LOCAL_GUEST_KEY = 'darenkaoshi:guest-id:v1'
 const LOCAL_ATTEMPT_KEY = 'darenkaoshi:guest-attempt:v1'
 const LOCAL_GAMIFICATION_KEY = 'darenkaoshi:guest-gamification:v1'
-const LOCAL_AUDIO_KEY = 'darenkaoshi:audio-muted:v1'
 
 function createLocalId(prefix) {
   const uuid = globalThis.crypto?.randomUUID?.()
@@ -131,179 +128,6 @@ function getLocalStorage() {
     return typeof window === 'undefined' ? null : window.localStorage
   } catch (error) {
     return null
-  }
-}
-
-const soundLibraryPromise = import('jsfxr')
-  .then((module) => module.sfxr || module.default?.sfxr || null)
-  .catch(() => null)
-
-const audioState = {
-  context: null,
-  muted: false,
-  activeSceneId: null,
-  userActivated: false,
-  activeMusic: null,
-  activeMusicSrc: '',
-  fadeTimers: new Set()
-}
-
-try {
-  audioState.muted = getLocalStorage()?.getItem(LOCAL_AUDIO_KEY) === '1'
-} catch (error) {
-  audioState.muted = false
-}
-
-function fadeMusic(audio, targetVolume, durationMs = 420, onComplete) {
-  if (!audio || typeof window === 'undefined') return
-  const startVolume = audio.volume
-  const startedAt = performance.now()
-  const timer = window.setInterval(() => {
-    const progress = Math.min(1, (performance.now() - startedAt) / durationMs)
-    const eased = 1 - Math.pow(1 - progress, 3)
-    audio.volume = startVolume + (targetVolume - startVolume) * eased
-    if (progress >= 1) {
-      window.clearInterval(timer)
-      audioState.fadeTimers.delete(timer)
-      onComplete?.()
-    }
-  }, 32)
-  audioState.fadeTimers.add(timer)
-}
-
-const audioManager = {
-  activate() {
-    audioState.userActivated = true
-    if (typeof state !== 'undefined' && state.screen === 'home' && !audioState.muted) this.startHomeMusic()
-  },
-  isMuted() {
-    return audioState.muted
-  },
-  toggle() {
-    this.activate()
-    audioState.muted = !audioState.muted
-    try {
-      getLocalStorage()?.setItem(LOCAL_AUDIO_KEY, audioState.muted ? '1' : '0')
-    } catch (error) {
-      // Audio preference is optional; a blocked storage API should not block play.
-    }
-    if (audioState.muted) {
-      audioState.context?.suspend?.()
-      this.stopMusic()
-    } else if (typeof state !== 'undefined') {
-      if (state.screen === 'home') this.startHomeMusic()
-      if (state.screen === 'question') this.playScene(scenarios[state.scenarioIndex]?.id)
-    }
-    return audioState.muted
-  },
-  resetScene() {
-    audioState.activeSceneId = null
-  },
-  stopMusic() {
-    const current = audioState.activeMusic
-    audioState.activeMusic = null
-    audioState.activeMusicSrc = ''
-    if (!current) return
-    fadeMusic(current, 0, 260, () => {
-      current.pause()
-      current.currentTime = 0
-    })
-  },
-  switchMusic(config) {
-    if (!config?.src || audioState.muted || !audioState.userActivated) return
-    const targetVolume = Math.max(0.03, Math.min(0.24, Number(config.volume) || 0.1))
-    if (audioState.activeMusic && audioState.activeMusicSrc === config.src) {
-      fadeMusic(audioState.activeMusic, targetVolume, 240)
-      if (audioState.activeMusic.paused) audioState.activeMusic.play().catch(() => {})
-      return
-    }
-    const previous = audioState.activeMusic
-    if (previous) {
-      fadeMusic(previous, 0, 260, () => {
-        previous.pause()
-        previous.currentTime = 0
-      })
-    }
-    const next = new Audio(config.src)
-    next.loop = true
-    next.preload = 'auto'
-    next.volume = 0
-    audioState.activeMusic = next
-    audioState.activeMusicSrc = config.src
-    next.play().catch(() => {})
-    fadeMusic(next, targetVolume, 520)
-  },
-  startHomeMusic() {
-    this.switchMusic(audioRules?.homeMusic)
-  },
-  ensureContext() {
-    if (!audioState.userActivated || audioState.muted || typeof window === 'undefined') return null
-    if (audioState.context) {
-      audioState.context.resume?.().catch(() => {})
-      return audioState.context
-    }
-    const AudioContextCtor = window.AudioContext || window.webkitAudioContext
-    if (!AudioContextCtor) return null
-    try {
-      audioState.context = new AudioContextCtor()
-      audioState.context.resume?.().catch(() => {})
-      return audioState.context
-    } catch (error) {
-      return null
-    }
-  },
-  async playPreset(preset, config = {}, delayMs = 0) {
-    if (audioState.muted) return
-    const context = this.ensureContext()
-    if (!context) return
-    const api = await soundLibraryPromise
-    if (audioState.muted) return
-    const when = context.currentTime + Math.max(0, delayMs) / 1000
-    if (api) {
-      try {
-        const sound = api.generate(preset, {
-          sound_vol: Math.max(0.02, Math.min(0.25, Number(config.volume) || 0.1)),
-          sample_rate: 22050,
-          sample_size: 8
-        })
-        const pitch = Math.max(0.55, Math.min(1.5, Number(config.pitch) || 1))
-        if (Number.isFinite(sound.p_base_freq)) sound.p_base_freq = Math.max(0.03, Math.min(1, sound.p_base_freq * pitch))
-        if (Number.isFinite(sound.p_freq_limit) && sound.p_freq_limit > 0) sound.p_freq_limit = Math.max(0.02, Math.min(1, sound.p_freq_limit * pitch))
-        const source = api.toWebAudio(sound, context)
-        if (!source) return
-        const gain = context.createGain()
-        gain.gain.setValueAtTime(0.72, when)
-        source.connect(gain)
-        gain.connect(context.destination)
-        source.start(when)
-        return
-      } catch (error) {
-        // Fall through to a tiny oscillator when the remote library is unavailable.
-      }
-    }
-    const oscillator = context.createOscillator()
-    const gain = context.createGain()
-    const pitch = Math.max(0.55, Math.min(1.5, Number(config.pitch) || 1))
-    const baseFrequency = 300 * pitch
-    oscillator.type = preset === 'hitHurt' ? 'triangle' : 'sine'
-    oscillator.frequency.setValueAtTime(baseFrequency, when)
-    oscillator.frequency.exponentialRampToValueAtTime(baseFrequency * 1.65, when + 0.18)
-    gain.gain.setValueAtTime(0.0001, when)
-    gain.gain.exponentialRampToValueAtTime(Math.max(0.018, Number(config.volume) || 0.06), when + 0.015)
-    gain.gain.exponentialRampToValueAtTime(0.0001, when + 0.24)
-    oscillator.connect(gain)
-    gain.connect(context.destination)
-    oscillator.start(when)
-    oscillator.stop(when + 0.25)
-  },
-  playOptionClick() {
-    const click = audioRules?.optionClick
-    if (click) this.playPreset(click.preset, click)
-  },
-  playScene(sceneId) {
-    if (!audioState.userActivated) return
-    const music = audioRules?.sceneMusic?.find((entry) => entry.sceneId === sceneId)
-    if (music) this.switchMusic(music)
   }
 }
 
@@ -325,13 +149,6 @@ const guestId = getOrCreateGuestId()
 const state = { screen: 'home', scenarioIndex: 0, answers: {}, selectedAnswer: null, transitioning: false, attemptId: createLocalId('attempt') }
 let resultDeckEntries = []
 let activeResultCardDeck = null
-
-window.addEventListener('pointerdown', () => {
-  if (state.screen === 'home' && !audioState.muted) audioManager.activate()
-}, { passive: true })
-window.addEventListener('keydown', () => {
-  if (state.screen === 'home' && !audioState.muted) audioManager.activate()
-}, { passive: true })
 
 function storedAnswers() {
   return Object.fromEntries(Object.entries(state.answers).map(([index, optionIndex]) => {
@@ -470,30 +287,7 @@ function validateGamificationData(rules) {
   return errors
 }
 
-function validateAudioData(rules, stories) {
-  const errors = []
-  const presets = new Set(['pickupCoin', 'laserShoot', 'explosion', 'powerUp', 'hitHurt', 'jump', 'blipSelect', 'synth', 'tone', 'click', 'random'])
-  if (!rules || typeof rules !== 'object') return ['音效规则缺失']
-  if (!rules.optionClick?.preset || !presets.has(rules.optionClick.preset)) errors.push('选项点击音效预设无效')
-  if (!Number.isFinite(rules.optionClick?.volume) || rules.optionClick.volume <= 0 || rules.optionClick.volume > 0.25) errors.push('选项点击音效音量无效')
-  if (!rules.homeMusic?.src) errors.push('首页等待音乐缺失')
-  if (!Array.isArray(rules.sceneMusic)) return ['场景背景音乐规则缺失']
-  const storyIds = new Set(stories.map((story) => story.id))
-  const audioIds = new Set()
-  rules.sceneMusic.forEach((music) => {
-    if (!music?.sceneId || audioIds.has(music.sceneId)) errors.push(`场景背景音乐 ID 重复或缺失：${music?.sceneId || 'unknown'}`)
-    audioIds.add(music.sceneId)
-    if (!storyIds.has(music.sceneId)) errors.push(`场景背景音乐引用了不存在的故事：${music.sceneId}`)
-    if (!music.src) errors.push(`场景背景音乐文件缺失：${music.sceneId}`)
-    if (!Number.isFinite(music.volume) || music.volume <= 0 || music.volume > 0.25) errors.push(`场景背景音乐音量超出范围：${music.sceneId}`)
-  })
-  stories.forEach((story) => {
-    if (!audioIds.has(story.id)) errors.push(`故事缺少场景背景音乐：${story.id}`)
-  })
-  return errors
-}
-
-function validateGameData(stories, branches, cards, gamification, audio) {
+function validateGameData(stories, branches, cards, gamification) {
   const errors = []
   const storyIds = new Set()
   const branchIds = new Set()
@@ -548,36 +342,32 @@ function validateGameData(stories, branches, cards, gamification, audio) {
     })
   })
   errors.push(...validateGamificationData(gamification))
-  errors.push(...validateAudioData(audio, stories))
   return errors
 }
 
 async function loadGameData() {
   try {
-    const [storiesResponse, branchesResponse, cardsResponse, gamificationResponse, audioResponse] = await Promise.all([
+    const [storiesResponse, branchesResponse, cardsResponse, gamificationResponse] = await Promise.all([
       fetch(gameDataFiles.stories),
       fetch(gameDataFiles.branches),
       fetch(gameDataFiles.cards),
-      fetch(gameDataFiles.gamification),
-      fetch(gameDataFiles.audio)
+      fetch(gameDataFiles.gamification)
     ])
-    if (![storiesResponse, branchesResponse, cardsResponse, gamificationResponse, audioResponse].every((response) => response.ok)) {
+    if (![storiesResponse, branchesResponse, cardsResponse, gamificationResponse].every((response) => response.ok)) {
       throw new Error('游戏数据表加载失败')
     }
-    const [stories, branches, cards, gamification, audio] = await Promise.all([
+    const [stories, branches, cards, gamification] = await Promise.all([
       storiesResponse.json(),
       branchesResponse.json(),
       cardsResponse.json(),
-      gamificationResponse.json(),
-      audioResponse.json()
+      gamificationResponse.json()
     ])
-    const errors = validateGameData(stories, branches, cards, gamification, audio)
+    const errors = validateGameData(stories, branches, cards, gamification)
     if (errors.length) throw new Error(errors.join('；'))
     scenarios = stories
     branchRules = branches
     identityCards = cards
     gamificationRules = gamification
-    audioRules = audio
     restoreGuestAttempt()
     loadGamificationProfile()
     if (state.screen === 'result') recordCompletedAttempt()
@@ -669,34 +459,10 @@ function render() {
     prepareResultCardDeck()
     prepareIdentityCardImages()
   }
-  syncSceneAudio()
-}
-
-function soundToggle() {
-  const muted = audioManager.isMuted()
-  return `<button class="sound-toggle" data-action="toggle-sound" type="button" aria-pressed="${muted}" aria-label="${muted ? '开启音效' : '关闭音效'}"><span aria-hidden="true">${muted ? '◌' : '♪'}</span><b>${muted ? '音效已关' : '音效开启'}</b></button>`
-}
-
-function syncSceneAudio() {
-  if (state.screen === 'home') {
-    audioManager.resetScene()
-    if (audioState.userActivated && !audioState.muted) audioManager.startHomeMusic()
-    return
-  }
-  if (state.screen !== 'question' || !scenarios.length) {
-    audioManager.resetScene()
-    audioManager.stopMusic()
-    return
-  }
-  const sceneId = scenarios[state.scenarioIndex]?.id
-  if (!sceneId || sceneId === audioState.activeSceneId) return
-  audioState.activeSceneId = sceneId
-  audioManager.playScene(sceneId)
 }
 
 function homeScreen() {
   return `<section class="splash-screen page-enter">
-    <div class="splash-audio-control">${soundToggle()}</div>
     <img class="splash-logo" src="assets/darenkaoshi-logo.png" alt="《大人考试》" />
     <button class="splash-answer" data-action="start-test">答卷</button>
     <a class="splash-doctor-link" href="doctor/">更多入口：出卷人 · 天使联系 · AIGC <span aria-hidden="true">↗</span></a>
@@ -734,7 +500,6 @@ function scenariosScreen() {
 function questionScreen() {
   const item = scenarios[state.scenarioIndex]
   return `<section class="test-screen page-enter">
-    <div class="test-audio-control">${soundToggle()}</div>
     <img class="test-logo" src="assets/darenkaoshi-logo.png" alt="《大人考试》" />
     ${sceneNavigator()}
     <div class="test-content">
@@ -1682,14 +1447,8 @@ function prepareIdentityCardImages() {
 function bindActions() {
   document.querySelectorAll('[data-action]').forEach((element) => element.addEventListener('click', () => {
     const action = element.dataset.action
-    if (action === 'toggle-sound') {
-      audioManager.toggle()
-      render()
-      return
-    }
     if (action === 'home') { state.screen = 'home'; state.scenarioIndex = 0; state.selectedAnswer = null }
     if (action === 'scenarios' || action === 'start-test') {
-      audioManager.activate()
       state.screen = 'question'
       state.scenarioIndex = 0
       state.answers = {}
@@ -1704,7 +1463,6 @@ function bindActions() {
       })
     }
     if (action === 'open-scenario') {
-      audioManager.activate()
       state.transitioning = false
       state.screen = 'question'
       state.scenarioIndex = Number(element.dataset.index)
@@ -1712,10 +1470,8 @@ function bindActions() {
       saveGuestAttempt()
     }
     if (action === 'answer') {
-      audioManager.activate()
       if (state.transitioning) return
       state.transitioning = true
-      audioManager.playOptionClick()
       state.selectedAnswer = Number(element.dataset.index)
       state.answers[state.scenarioIndex] = state.selectedAnswer
       const answeredStory = scenarios[state.scenarioIndex]
