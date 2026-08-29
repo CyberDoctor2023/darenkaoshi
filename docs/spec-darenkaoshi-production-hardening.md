@@ -24,6 +24,6 @@
 ## Validation plan
 
 - `git diff --check`、JavaScript/JSON 静态检查与关键路径源码复核。
-- 使用 `wrangler pages deploy deploy/darenkaoshi --project-name=cyberdoctor` 发布。
+- 使用 `wrangler pages deploy deploy/darenkaoshi --project-name=cyberdoctor --branch main` 发布到生产分支。
 - 读取部署后的 `/`、`/darenkaoshi/`、`/doctor/` 响应头与入口内容，确认路由和缓存边界。
 - 不执行项目测试或浏览器自动化测试。
